@@ -538,8 +538,9 @@
       const q = state.query.trim().toLowerCase();
       let list = state.items.slice();
       if (q) {
-        return list.filter((it) =>
-          [
+        const queryChars = [...new Set(Array.from(q).filter((char) => /[\p{L}\p{N}]/u.test(char)))];
+        return list.map((it, originalIndex) => {
+          const haystack = [
             it.title,
             it.content,
             it.fix_note,
@@ -547,8 +548,19 @@
             normalizeCategory(it.category),
             normalizeFixStatus(it.fix_status),
             it.keywords
-          ].filter(Boolean).join("\n").toLowerCase().includes(q)
-        );
+          ].filter(Boolean).join("\n").toLowerCase();
+          const compactHaystack = haystack.replace(/[^\p{L}\p{N}]+/gu, "");
+          const compactQuery = q.replace(/[^\p{L}\p{N}]+/gu, "");
+          const matchedChars = queryChars.filter((char) => compactHaystack.includes(char)).length;
+          const exactMatch = compactQuery && compactHaystack.includes(compactQuery) ? 1 : 0;
+          return { it, originalIndex, matchedChars, exactMatch };
+        }).filter((entry) => entry.matchedChars > 0)
+          .sort((a, b) =>
+            b.exactMatch - a.exactMatch ||
+            b.matchedChars - a.matchedChars ||
+            a.originalIndex - b.originalIndex
+          )
+          .map((entry) => entry.it);
       }
       if (state.section) list = list.filter((it) => it.section === state.section);
       if (state.category) list = list.filter((it) => normalizeCategory(it.category) === state.category);
