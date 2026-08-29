@@ -155,7 +155,12 @@
     .feature-poster-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 66px 8px 8px; background: rgba(26,44,34,.82); color: #fff; font-size: 12px; font-weight: 900; text-align: center; pointer-events: none; }
     .feature-update-section { min-width: 0; }
     .feature-update-list { display: grid; gap: 12px; }
-    .feature-update-card { position: relative; border: 1.5px solid var(--cr-bd); border-radius: 12px; background: var(--cr); padding: 14px; overflow: hidden; }
+    .feature-update-card { position: relative; border: 1.5px solid var(--cr-bd); border-radius: 12px; background: var(--cr); padding: 14px; overflow: hidden; scroll-margin: 110px 0; }
+    .feature-update-card.focus { border-color: var(--yw-dk); box-shadow: 0 0 0 4px rgba(201,162,39,.22); animation: feature-focus-pulse 1.1s ease 2; }
+    @keyframes feature-focus-pulse { 50% { box-shadow: 0 0 0 8px rgba(201,162,39,.12); } }
+    .feature-search-card { border-color: rgba(201,162,39,.72); background: linear-gradient(135deg, #fff 0%, #fff9df 100%); }
+    .feature-search-summary { color: var(--ink-l); font-size: 12.5px; line-height: 1.55; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
+    .feature-search-open { align-self: center; color: #7b6205; font-size: 12px; font-weight: 900; white-space: nowrap; }
     .feature-update-number { display: inline-flex; align-items: center; border-radius: 999px; background: var(--gn-deep); color: #fff; padding: 3px 9px; font-size: 11px; font-weight: 900; }
     .feature-update-title { margin: 8px 0 2px; color: var(--ink); font-size: 17px; line-height: 1.4; font-weight: 900; overflow-wrap: anywhere; }
     .feature-update-subtitle { color: var(--gn-deep); font-size: 13px; line-height: 1.55; font-weight: 900; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -307,6 +312,10 @@
       line-height: 1.35;
     }
     .mini-tag.error { background: #fbeae5; border-color: #d79a8b; color: #9a3b3b; }
+    .mini-tag.pinned { background: #fff4bd; border-color: var(--yw-dk); color: #7b6205; }
+    .pinned-group { margin: 0 0 16px; padding: 12px; border: 1.5px solid rgba(201,162,39,.55); border-radius: 14px; background: linear-gradient(135deg, #fffdf4 0%, #fff8d7 100%); }
+    .pinned-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 10px; color: #7b6205; font-size: 14px; font-weight: 900; }
+    .card.pinned { border-color: rgba(201,162,39,.75); box-shadow: 0 5px 18px rgba(201,162,39,.13); }
     .status-panel {
       border: 1.5px solid var(--cr-bd);
       border-left: 4px solid var(--gn);
@@ -334,6 +343,7 @@
     .video-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--gn-deep); background: var(--gn-soft); border: 1.5px solid var(--gn-lt); border-radius: 20px; padding: 7px 13px; font-size: 13px; font-weight: 800; text-decoration: none; }
     .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink-l); font-size: 12px; margin-top: 12px; }
     .link-btn { border: 0; background: transparent; color: var(--gn-deep); font-weight: 800; padding: 0; }
+    .link-btn.pin { color: #8b6c00; }
     .link-btn.danger { color: #9a3b3b; }
     .empty, .loading { text-align: center; color: #8b8477; padding: 42px 0; font-size: 14px; }
     .overlay {
@@ -494,6 +504,7 @@
       { key: "智慧教室", color: "#C9A227" }
     ];
     const FEATURE_CATEGORY = "App最新功能";
+    const PIN_KEYWORD_MARKER = "__KB_PINNED__";
     const FEATURE_MODULE_TITLE = "思悦云学习 App 学生端最新版上新功能";
     const FEATURE_DATA_PREFIX = "FEATURE_ITEMS_V1:";
     const FEATURE_DATA_PREFIX_V2 = "FEATURE_DATA_V2:";
@@ -520,6 +531,7 @@
       featureDraftPosters: [],
       featureDraftItems: [],
       featureOpen: false,
+      featureFocusIndex: null,
       featureEditing: false
     };
     let loadPromise = null;
@@ -543,6 +555,9 @@
     };
     const safeFileName = (name) => name.replace(/[^\w.\-]+/g, "_").slice(-90);
     const splitUrls = (value) => String(value || "").split(/\n+/).map((u) => u.trim()).filter(Boolean);
+    const stripPinMarker = (value) => String(value || "").split(/\s+/).filter((token) => token && token !== PIN_KEYWORD_MARKER).join(" ");
+    const isPinned = (item) => String(item?.keywords || "").split(/\s+/).includes(PIN_KEYWORD_MARKER);
+    const keywordsWithPin = (value, pinned) => [stripPinMarker(value), pinned ? PIN_KEYWORD_MARKER : ""].filter(Boolean).join(" ");
     const normalizeSearchText = (value) => Array.from(String(value || "").normalize("NFKC").toLowerCase())
       .filter((char) => /[\p{L}\p{N}]/u.test(char) && !SEARCH_STOP_CHARS.has(char));
     const searchMatchScore = (query, content) => {
@@ -662,10 +677,36 @@
       toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1800);
     }
 
+    function currentFeatureSearchItems() {
+      const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
+      if (!feature) return [];
+      const { version, posters, items } = parseFeatureData(feature);
+      const displayVersion = version || state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "";
+      return items.map((item, index) => ({
+        id: `feature-search-${feature.id}-${index}`,
+        section: "学生端",
+        category: "当前最新版功能",
+        title: item.title || `更新事项 ${index + 1}`,
+        content: [displayVersion ? `版本：${displayVersion}` : "", item.subtitle, item.content].filter(Boolean).join("\n"),
+        image_url: [
+          ...(index === 0 ? posters.map((poster) => poster.image_url) : []),
+          item.image_url
+        ].filter(Boolean).join("\n"),
+        video_url: "",
+        keywords: [FEATURE_MODULE_TITLE, "当前最新版功能", "上新", "海报", displayVersion, item.title, item.subtitle, item.content].filter(Boolean).join(" "),
+        created_at: feature.created_at,
+        updated_at: feature.updated_at,
+        _featureSearchResult: true,
+        _featureIndex: index,
+        _featureVersion: displayVersion
+      }));
+    }
+
     function filteredItems() {
       const q = state.query.trim().toLowerCase();
       let list = state.items.filter((it) => normalizeCategory(it.category) !== FEATURE_CATEGORY);
       if (q) {
+        list = [...currentFeatureSearchItems(), ...list];
         return list.map((it, originalIndex) => {
           const haystack = [
             it.title,
@@ -673,8 +714,8 @@
             it.fix_note,
             it.section,
             normalizeCategory(it.category),
-            normalizeFixStatus(it.fix_status),
-            it.keywords
+            normalizeCategory(it.category) === "报错" ? normalizeFixStatus(it.fix_status) : "",
+            stripPinMarker(it.keywords)
           ].filter(Boolean).join("\n").toLowerCase();
           const { matchedChars, exactMatch } = searchMatchScore(q, haystack);
           return { it, originalIndex, matchedChars, exactMatch };
@@ -682,6 +723,7 @@
           .sort((a, b) =>
             b.exactMatch - a.exactMatch ||
             b.matchedChars - a.matchedChars ||
+            Number(isPinned(b.it)) - Number(isPinned(a.it)) ||
             a.originalIndex - b.originalIndex
           )
           .map((entry) => entry.it);
@@ -723,7 +765,7 @@
           <button class="image-download" data-url="${esc(poster.image_url)}" data-name="最新功能海报${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
         </div>`).join("");
       const itemCards = items.map((item, index) => `
-        <article class="feature-update-card">
+        <article id="feature-update-${index}" class="feature-update-card${state.featureFocusIndex === index ? " focus" : ""}">
           <span class="feature-update-number">更新事项 ${index + 1}</span>
           <h3 class="feature-update-title">${esc(item.title || `更新事项 ${index + 1}`)}</h3>
           ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${esc(item.subtitle)}</div>` : ""}
@@ -765,9 +807,20 @@
       $("featureToggle").addEventListener("click", (event) => {
         event.stopPropagation();
         state.featureOpen = !state.featureOpen;
+        if (!state.featureOpen) state.featureFocusIndex = null;
         renderFeature();
       });
+      if (state.featureOpen && Number.isInteger(state.featureFocusIndex)) {
+        window.requestAnimationFrame(() => $("feature-update-" + state.featureFocusIndex)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+      }
     }
+
+    window.openFeatureSearchResult = (index, event) => {
+      event?.stopPropagation();
+      state.featureFocusIndex = Number(index);
+      state.featureOpen = true;
+      renderFeature();
+    };
 
     window.requestArchiveFeatureItems = () => {
       const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
@@ -844,6 +897,7 @@
 
     window.openFeatureEditor = (resetForNewVersion = false) => {
       state.featureOpen = false;
+      state.featureFocusIndex = null;
       state.featureEditing = true;
       renderFeature();
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
@@ -1111,9 +1165,16 @@
       const directories = visibleSections.map((section) => {
         const sectionItems = list.filter((it) => it.section === section.key);
         if (!sectionItems.length) return "";
+        const pinnedItems = sectionItems.filter(isPinned);
+        const regularSectionItems = sectionItems.filter((item) => !isPinned(item));
+        const pinnedGroup = pinnedItems.length ? `
+          <section class="pinned-group" aria-label="${section.key}置顶内容">
+            <div class="pinned-head"><span>📌 置顶内容</span><span>${pinnedItems.length}/3 条</span></div>
+            ${pinnedItems.map(itemCard).join("")}
+          </section>` : "";
         const visibleCategories = state.category ? [state.category] : categories;
-        const groups = visibleCategories.map((category) => {
-          const categoryItems = sectionItems.filter((it) => normalizeCategory(it.category) === category);
+        const groups = pinnedGroup + visibleCategories.map((category) => {
+          const categoryItems = regularSectionItems.filter((it) => normalizeCategory(it.category) === category);
           if (!categoryItems.length) return "";
           return `
             <section class="category-group" aria-labelledby="${section.key}-${category}">
@@ -1146,16 +1207,33 @@
     }
 
     function itemCard(it) {
+      if (it._featureSearchResult) {
+        const summary = it.content;
+        return `
+          <article class="card feature-search-card">
+            <button class="card-head" onclick="openFeatureSearchResult(${it._featureIndex}, event)">
+              <span class="dot" style="background:var(--yw-dk);margin-top:7px"></span>
+              <span class="card-title-wrap">
+                <span class="title">${esc(it.title)}</span>
+                <span class="mini-tags"><span class="mini-tag" style="border-color:var(--yw-dk);color:#7b6205;background:#fff9df">当前最新版功能</span>${it._featureVersion ? `<span class="mini-tag">版本 ${esc(it._featureVersion)}</span>` : ""}</span>
+                <span class="feature-search-summary">${esc(summary)}</span>
+              </span>
+              <span class="feature-search-open">打开查看 ›</span>
+            </button>
+          </article>`;
+      }
       const open = state.expanded.has(String(it.id));
+      const pinned = isPinned(it);
       const category = normalizeCategory(it.category);
       const status = normalizeFixStatus(it.fix_status);
       return `
-        <article class="card">
+        <article class="card${pinned ? " pinned" : ""}">
           <button class="card-head" onclick="toggleItem('${it.id}')" aria-expanded="${open}">
             <span class="dot" style="background:${colorForCategory(category)};margin-top:7px"></span>
             <span class="card-title-wrap">
               <span class="title">${esc(it.title)}</span>
               <span class="mini-tags">
+                ${pinned ? `<span class="mini-tag pinned">📌 置顶</span>` : ""}
                 <span class="mini-tag ${category === "报错" ? "error" : ""}">${esc(category || "未分类")}</span>
                 ${category === "报错" ? `<span class="mini-tag" style="border-color:${colorForFixStatus(status)};color:${colorForFixStatus(status)}">${esc(status)}</span>` : ""}
               </span>
@@ -1183,6 +1261,7 @@
       const media = imageGrid + (it.video_url ? `<a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "");
       const admin = state.isAdmin ? `
         <span>
+          <button class="link-btn pin" onclick="togglePinnedItem('${it.id}', this)">${isPinned(it) ? "取消置顶" : "置顶"}</button>
           <button class="link-btn" onclick='openEditor(${JSON.stringify(it).replaceAll("'", "&#039;")})'>编辑</button>
           <button class="link-btn danger" onclick="requestDeleteItem('${it.id}')">删除</button>
         </span>` : "";
@@ -1459,10 +1538,21 @@
         video_url: videoUrl,
         keywords: ""
       };
-      row.keywords = [row.title, row.content, row.fix_note].filter(Boolean).join(" ");
+      const existingItem = state.items.find((item) => String(item.id) === String(id));
+      const preservePin = isPinned(existingItem);
+      row.keywords = keywordsWithPin([row.title, row.content, row.fix_note].filter(Boolean).join(" "), preservePin);
       if (!row.title || !row.content) {
         $("editError").textContent = "标题和内容都要填写。";
         return;
+      }
+      if (preservePin && existingItem?.section !== row.section) {
+        const targetPinnedCount = state.items.filter((item) =>
+          item.section === row.section && isPinned(item) && String(item.id) !== String(id)
+        ).length;
+        if (targetPinnedCount >= 3) {
+          $("editError").textContent = `${row.section}已经置顶3条，请先取消一条置顶再移动。`;
+          return;
+        }
       }
       const res = await db.rpc("kb_admin_save_item_v2", {
         p_password: state.adminPassword,
@@ -1494,6 +1584,50 @@
       closeModal();
       render();
       showToast(id ? "内容已更新" : "内容已发布");
+      await loadAll();
+    };
+
+    window.togglePinnedItem = async (id, button) => {
+      const item = state.items.find((row) => String(row.id) === String(id));
+      if (!item || normalizeCategory(item.category) === FEATURE_CATEGORY) return;
+      const nextPinned = !isPinned(item);
+      if (nextPinned) {
+        const pinnedCount = state.items.filter((row) =>
+          normalizeCategory(row.category) !== FEATURE_CATEGORY &&
+          row.section === item.section &&
+          isPinned(row) &&
+          String(row.id) !== String(item.id)
+        ).length;
+        if (pinnedCount >= 3) {
+          showToast(`${item.section}最多置顶3条，请先取消一条置顶`);
+          return;
+        }
+      }
+      if (button) button.disabled = true;
+      const nextKeywords = keywordsWithPin(item.keywords, nextPinned);
+      const res = await db.rpc("kb_admin_save_item_v2", {
+        p_password: state.adminPassword,
+        p_id: item.id,
+        p_section: item.section,
+        p_category: normalizeCategory(item.category),
+        p_title: item.title,
+        p_content: item.content,
+        p_fix_status: item.fix_status || "",
+        p_fix_note: item.fix_note || "",
+        p_image_url: item.image_url || "",
+        p_video_url: item.video_url || "",
+        p_keywords: nextKeywords
+      });
+      if (res.error) {
+        showToast(`置顶操作失败：${res.error.message || "请重新登录管理员窗口"}`);
+        if (button) button.disabled = false;
+        return;
+      }
+      const saved = Array.isArray(res.data) ? res.data[0] : res.data;
+      const updated = saved?.id ? saved : { ...item, keywords: nextKeywords };
+      state.items = state.items.map((row) => String(row.id) === String(id) ? updated : row);
+      render();
+      showToast(nextPinned ? `已置顶到${item.section}` : "已取消置顶");
       await loadAll();
     };
 
@@ -1530,10 +1664,10 @@
 
     function parseImportText(text) {
       return text.split(/\n\s*\n|\n-{3,}\n/).map((b) => b.trim()).filter(Boolean).map((block) => {
-        const row = { section: "学生端", category: "报错", title: "", content: "", fix_status: "修复中", fix_note: "", image_url: "", video_url: "", keywords: "" };
+        const row = { section: "学生端", category: "报错", title: "", content: "", fix_status: "修复中", fix_note: "", image_url: "", video_url: "", keywords: "", pinned: false };
         for (const raw of block.split("\n")) {
           const line = raw.trim();
-          const m = line.match(/^(标题|Q|内容|正文|A|板块|分类|类型|修复状态|状态|状态说明|修复说明|图片|视频)[:：]\s*(.*)$/i);
+          const m = line.match(/^(标题|Q|内容|正文|A|板块|分类|类型|修复状态|状态|状态说明|修复说明|图片|视频|置顶)[:：]\s*(.*)$/i);
           if (!m) {
             if (row.content) row.content += "\n" + line;
             else if (row.title) row.title += "\n" + line;
@@ -1549,8 +1683,10 @@
           else if (key === "状态说明" || key === "修复说明") row.fix_note = value;
           else if (key === "图片") row.image_url = value;
           else if (key === "视频") row.video_url = value;
+          else if (key === "置顶") row.pinned = /^(是|true|1|yes)$/i.test(value);
         }
-        row.keywords = [row.title, row.content, row.fix_note].filter(Boolean).join(" ");
+        row.keywords = keywordsWithPin([row.title, row.content, row.fix_note].filter(Boolean).join(" "), row.pinned);
+        delete row.pinned;
         if (row.category === "报错" && normalizeFixStatus(row.fix_status) === "修复中" && !row.fix_note) {
           row.fix_note = DEFAULT_FIXING_NOTE;
         }
@@ -1599,7 +1735,8 @@
         (normalizeCategory(it.category) === "报错" ? `\n修复状态：${normalizeFixStatus(it.fix_status)}` : "") +
         (normalizeCategory(it.category) === "报错" && it.fix_note ? `\n状态说明：${it.fix_note}` : "") +
         (it.image_url ? `\n图片：${it.image_url}` : "") +
-        (it.video_url ? `\n视频：${it.video_url}` : "")
+        (it.video_url ? `\n视频：${it.video_url}` : "") +
+        (isPinned(it) ? `\n置顶：是` : "")
       ).join("\n\n---\n\n");
       await navigator.clipboard.writeText(text);
       alert("已复制全部备份。");
@@ -1677,11 +1814,13 @@
     document.addEventListener("click", (event) => {
       if (state.featureOpen && !event.target.closest("#featureModule") && !event.target.closest("#imageLightbox")) {
         state.featureOpen = false;
+        state.featureFocusIndex = null;
         renderFeature();
       }
     });
     $("featureBackdrop").addEventListener("click", () => {
       state.featureOpen = false;
+      state.featureFocusIndex = null;
       renderFeature();
     });
   </script>
