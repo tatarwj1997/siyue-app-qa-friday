@@ -341,6 +341,10 @@
     .media-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
     .media-preview-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 5px 4px; background: rgba(26,44,34,.82); color: #fff; font-size: 11px; line-height: 1.2; font-weight: 900; text-align: center; }
     .video-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--gn-deep); background: var(--gn-soft); border: 1.5px solid var(--gn-lt); border-radius: 20px; padding: 7px 13px; font-size: 13px; font-weight: 800; text-decoration: none; }
+    .video-player-wrap { width: min(100%, 720px); display: grid; gap: 8px; margin-top: 12px; }
+    .video-player { display: block; width: 100%; max-height: 480px; border: 1.5px solid var(--cr-bd); border-radius: 10px; background: #101813; }
+    .video-player-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .video-player-actions .video-link { margin-top: 0; }
     .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink-l); font-size: 12px; margin-top: 12px; }
     .link-btn { border: 0; background: transparent; color: var(--gn-deep); font-weight: 800; padding: 0; }
     .link-btn.pin { color: #8b6c00; }
@@ -392,6 +396,9 @@
     .preview-item { position: relative; width: 92px; aspect-ratio: 1; }
     .preview-img { width: 100%; height: 100%; border: 1.5px solid var(--cr-bd); border-radius: 8px; object-fit: cover; background: #fff; }
     .preview-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border: 0; border-radius: 50%; padding: 0; background: rgba(26,44,34,.82); color: #fff; font-weight: 900; }
+    .video-upload-preview { position: relative; width: min(100%, 420px); }
+    .video-upload-preview .video-player { max-height: 280px; }
+    .video-upload-preview .preview-remove { z-index: 2; }
     .file-note { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; gap: 6px; border: 1.5px dashed var(--gn-lt); border-radius: 20px; background: var(--gn-soft); color: var(--gn-deep); padding: 5px 10px; font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
     .row { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.2fr) auto; gap: 8px; margin-bottom: 8px; }
     .toast {
@@ -527,6 +534,7 @@
       expanded: new Set(),
       knownItemIds: new Set(),
       pendingImageFiles: [],
+      pendingVideoFile: null,
       featureDraftVersion: "",
       featureDraftPosters: [],
       featureDraftItems: [],
@@ -537,6 +545,7 @@
     let loadPromise = null;
     let toastTimer = null;
     let liveChannel = null;
+    let videoSelectionToken = 0;
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
@@ -545,7 +554,7 @@
     const colorForFixStatus = (s) => fixStatusColors[s] || "#6B8C7A";
     const normalizeCategory = (c) => c === "更新" || c === "优化" ? "优化更新" : (c || "");
     const normalizeFixStatus = (s) => fixStatuses.includes(s) ? s : "修复中";
-    const isVideoUrl = (u) => /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(u || "");
+    const isVideoUrl = (u) => /\.(mp4|webm|mov|m4v|ogv|ogg)(\?.*)?$/i.test(u || "");
     const dateText = (d) => d ? new Date(d).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" }) : "—";
     const dateTimeText = (value) => {
       if (!value) return "暂无记录";
@@ -554,6 +563,41 @@
       return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
     const safeFileName = (name) => name.replace(/[^\w.\-]+/g, "_").slice(-90);
+    const formatVideoDuration = (seconds) => {
+      const total = Math.max(0, Math.round(Number(seconds) || 0));
+      return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+    };
+    const clearPendingVideoFile = () => {
+      if (state.pendingVideoFile?.previewUrl) URL.revokeObjectURL(state.pendingVideoFile.previewUrl);
+      state.pendingVideoFile = null;
+      const input = $("editVideoFile");
+      if (input) input.value = "";
+    };
+    const readVideoDuration = (file) => new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      let settled = false;
+      const timeout = window.setTimeout(() => finish(reject, new Error("读取视频时长超时，请重新选择或换成 MP4 格式。")), 12000);
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        video.onloadedmetadata = null;
+        video.onerror = null;
+        video.removeAttribute("src");
+        video.load();
+        URL.revokeObjectURL(objectUrl);
+        callback(value);
+      };
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        const duration = Number(video.duration);
+        if (!Number.isFinite(duration) || duration <= 0) finish(reject, new Error("无法读取视频时长，请换成 MP4、MOV 或 WebM 格式。"));
+        else finish(resolve, duration);
+      };
+      video.onerror = () => finish(reject, new Error("无法读取视频，请换成 MP4、MOV 或 WebM 格式。"));
+      video.src = objectUrl;
+    });
     const splitUrls = (value) => String(value || "").split(/\n+/).map((u) => u.trim()).filter(Boolean);
     const stripPinMarker = (value) => String(value || "").split(/\s+/).filter((token) => token && token !== PIN_KEYWORD_MARKER).join(" ");
     const isPinned = (item) => String(item?.keywords || "").split(/\s+/).includes(PIN_KEYWORD_MARKER);
@@ -1258,7 +1302,12 @@
           </button>
           <button class="image-download" data-url="${esc(url)}" data-name="${esc(it.title)}-图片${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
         </div>`).join("")}</div>` : "";
-      const media = imageGrid + (it.video_url ? `<a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "");
+      const videoMedia = !it.video_url ? "" : isVideoUrl(it.video_url) ? `
+        <div class="video-player-wrap">
+          <video class="video-player" src="${esc(it.video_url)}" controls playsinline preload="metadata"></video>
+          <div class="video-player-actions"><a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">↗ 打开原视频</a></div>
+        </div>` : `<a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>`;
+      const media = imageGrid + videoMedia;
       const admin = state.isAdmin ? `
         <span>
           <button class="link-btn pin" onclick="togglePinnedItem('${it.id}', this)">${isPinned(it) ? "取消置顶" : "置顶"}</button>
@@ -1339,6 +1388,8 @@
       const restoreFeatureModule = state.featureEditing;
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
       state.pendingImageFiles = [];
+      videoSelectionToken += 1;
+      clearPendingVideoFile();
       state.featureDraftVersion = "";
       for (const poster of state.featureDraftPosters) if (poster.previewUrl) URL.revokeObjectURL(poster.previewUrl);
       state.featureDraftPosters = [];
@@ -1390,6 +1441,8 @@
     window.openEditor = (item = null) => {
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
       state.pendingImageFiles = [];
+      videoSelectionToken += 1;
+      clearPendingVideoFile();
       const it = item || { section: "学生端", category: "报错", title: "", content: "", fix_status: "修复中", fix_note: DEFAULT_FIXING_NOTE, image_url: "", video_url: "", keywords: "" };
       const itemCategory = normalizeCategory(it.category) || "报错";
       const itemFixStatus = normalizeFixStatus(it.fix_status);
@@ -1419,8 +1472,11 @@
         <div class="hint" style="margin-top:6px">每次可选1张或多张；再次选择时，前面已选的图片会保留。</div>
         <textarea id="editImage" class="field" style="min-height:68px" placeholder="也可以粘贴图片链接；多张图片每行一个链接" oninput="renderMediaPreview('image')">${esc(it.image_url)}</textarea>
         <div id="imagePreview" class="upload-preview"></div>
+        <label>视频上传（选填，最长2分钟）</label>
+        <input id="editVideoFile" class="field" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg" onchange="previewUpload('video')">
+        <div class="hint" style="margin-top:6px">可上传1个视频；选择后会先检查时长，超过2分钟不会上传。新上传的视频会替换原视频或链接。</div>
         <label>视频/百度云链接（选填）</label>
-        <input id="editVideo" class="field" value="${esc(it.video_url)}" placeholder="粘贴百度云、网盘或视频下载链接" oninput="renderMediaPreview('video')">
+        <input id="editVideo" class="field" value="${esc(it.video_url)}" placeholder="也可以粘贴视频或网盘链接" oninput="handleVideoUrlInput()">
         <div id="videoPreview" class="upload-preview"></div>
         <div id="editError" class="error"></div>
         <button class="primary" style="width:100%;margin-top:18px" onclick="saveItem('${it.id || ""}')">保存</button>
@@ -1446,7 +1502,7 @@
       if (statusField.value !== "修复中" && noteField.value.trim() === DEFAULT_FIXING_NOTE) noteField.value = "";
     };
 
-    window.previewUpload = (kind) => {
+    window.previewUpload = async (kind) => {
       const input = kind === "image" ? $("editImageFile") : $("editVideoFile");
       const files = Array.from(input?.files || []);
       if (!files.length) return;
@@ -1464,7 +1520,39 @@
         state.pendingImageFiles.push(...uniqueNewFiles.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
         input.value = "";
         renderMediaPreview("image");
+      } else {
+        const file = files[0];
+        const token = ++videoSelectionToken;
+        if (!String(file.type || "").startsWith("video/") && !/\.(mp4|webm|mov|m4v|ogv|ogg)$/i.test(file.name || "")) {
+          $("editError").textContent = "请选择 MP4、MOV、WebM 或 OGV 视频文件。";
+          input.value = "";
+          return;
+        }
+        $("editError").textContent = "正在检查视频时长…";
+        try {
+          const duration = await readVideoDuration(file);
+          if (token !== videoSelectionToken) return;
+          if (duration > 120.5) {
+            $("editError").textContent = `视频最长2分钟；当前视频时长约 ${formatVideoDuration(duration)}，请重新选择。`;
+            input.value = "";
+            return;
+          }
+          clearPendingVideoFile();
+          state.pendingVideoFile = { file, duration, previewUrl: URL.createObjectURL(file) };
+          if ($("editVideo")) $("editVideo").value = "";
+          $("editError").textContent = "";
+          renderMediaPreview("video");
+        } catch (error) {
+          if (token !== videoSelectionToken) return;
+          $("editError").textContent = error.message || "无法读取视频，请重新选择。";
+          input.value = "";
+        }
       }
+    };
+
+    window.handleVideoUrlInput = () => {
+      if ($("editVideo")?.value.trim() && state.pendingVideoFile) clearPendingVideoFile();
+      renderMediaPreview("video");
     };
 
     window.renderMediaPreview = (kind) => {
@@ -1475,7 +1563,23 @@
         const pending = state.pendingImageFiles.map((entry, index) => `<span class="preview-item"><img class="preview-img" src="${esc(entry.previewUrl)}" alt="待上传图片${index + 1}"><button class="preview-remove" title="移除这张图片" onclick="removePendingImage(${index})">×</button></span>`);
         $("imagePreview").innerHTML = existing.length || pending.length ? `<div class="image-preview-grid">${[...existing, ...pending].join("")}</div><div class="hint">共 ${existing.length + pending.length}/5 张</div>` : "";
       } else {
-        $("videoPreview").innerHTML = url ? `<a class="video-link" href="${esc(url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "";
+        if (state.pendingVideoFile) {
+          const entry = state.pendingVideoFile;
+          $("videoPreview").innerHTML = `
+            <div class="video-upload-preview">
+              <video class="video-player" src="${esc(entry.previewUrl)}" controls playsinline preload="metadata"></video>
+              <button class="preview-remove" title="移除这个视频" onclick="removePendingVideo()">×</button>
+            </div>
+            <div class="file-note">待上传：${esc(entry.file.name)} · ${formatVideoDuration(entry.duration)}</div>`;
+        } else if (url && isVideoUrl(url)) {
+          $("videoPreview").innerHTML = `
+            <div class="video-upload-preview">
+              <video class="video-player" src="${esc(url)}" controls playsinline preload="metadata"></video>
+              <button class="preview-remove" title="移除这个视频" onclick="removeExistingVideo()">×</button>
+            </div>`;
+        } else {
+          $("videoPreview").innerHTML = url ? `<a class="video-link" href="${esc(url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "";
+        }
       }
     };
 
@@ -1490,6 +1594,17 @@
       const [removed] = state.pendingImageFiles.splice(index, 1);
       if (removed) URL.revokeObjectURL(removed.previewUrl);
       renderMediaPreview("image");
+    };
+
+    window.removePendingVideo = () => {
+      videoSelectionToken += 1;
+      clearPendingVideoFile();
+      renderMediaPreview("video");
+    };
+
+    window.removeExistingVideo = () => {
+      if ($("editVideo")) $("editVideo").value = "";
+      renderMediaPreview("video");
     };
 
     async function uploadImageFiles() {
@@ -1515,6 +1630,22 @@
       return [...existingUrls, ...uploadedUrls].slice(0, 5).join("\n");
     }
 
+    async function uploadVideoFile() {
+      if (!state.pendingVideoFile) return $("editVideo").value.trim();
+      const file = state.pendingVideoFile.file;
+      const path = `videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeFileName(file.name)}`;
+      const adminDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        global: { headers: { "x-kb-admin-password": state.adminPassword } }
+      });
+      const { error } = await adminDb.storage.from("kb-media").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if (error) throw error;
+      return db.storage.from("kb-media").getPublicUrl(path).data.publicUrl;
+    }
+
     window.saveItem = async (id) => {
       const category = $("editCategory").value;
       let imageUrl;
@@ -1522,7 +1653,7 @@
       try {
         $("editError").textContent = "正在上传文件并保存…";
         imageUrl = await uploadImageFiles();
-        videoUrl = $("editVideo").value.trim();
+        videoUrl = await uploadVideoFile();
       } catch (err) {
         $("editError").textContent = `上传失败：${err.message || "请确认 Supabase 上传空间已经创建。"}`;
         return;
