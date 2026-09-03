@@ -40,25 +40,27 @@
       box-shadow: 0 3px 20px rgba(46,125,90,.22);
     }
     .wrap { width: min(1180px, calc(100% - 56px)); margin: 0 auto; }
-    .head { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0 7px; gap: 12px; }
-    .head > div:first-child { flex: 1; min-width: 0; width: 100%; }
+    .head { position: relative; display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0 7px; gap: 12px; }
+    .head > div:first-child { flex: 1; min-width: 0; }
+    .head > .header-main { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 6px; width: 100%; }
     h1 {
       margin: 0;
       font-family: "Baloo 2", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-      font-size: 23px;
+      font-size: 22px;
       line-height: 1.12;
       color: #fff;
       font-weight: 800;
       margin-top: 0;
+      text-wrap: balance;
     }
     .title-line {
+      grid-area: 1 / 1 / 2 / -1;
       display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 7px;
-      padding-right: 192px;
+      align-items: flex-start;
+      min-height: 34px;
+      padding-right: 246px;
     }
-    .header-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+    .version-line { grid-area: 2 / 1 / 3 / 2; align-self: center; }
     .version-badge {
       display: inline-flex;
       align-items: center;
@@ -73,27 +75,37 @@
       white-space: nowrap;
     }
     .lock {
-      border: 0;
-      border-radius: 20px;
-      background: rgba(255,255,255,.16);
-      border: 1px solid rgba(255,255,255,.25);
-      color: #fff;
-      padding: 5px 10px;
-      min-width: 80px;
+      border: 1px solid rgba(255,255,255,.5);
+      border-radius: 7px;
+      background: rgba(255,255,255,.1);
+      color: inherit;
+      padding: 4px 10px;
+      min-width: 0;
       font-size: 12px;
       font-weight: 800;
     }
-    .lock.admin { background: rgba(255,217,90,.22); color: var(--yw); border-color: rgba(255,217,90,.45); }
-    .admin-side { position: fixed; top: 8px; right: 12px; z-index: 20; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; width: 178px; padding: 5px 6px; border: 1px solid rgba(255,255,255,.2); border-radius: 9px; background: var(--gn-deep); box-shadow: var(--sh-card); }
+    .lock:hover { background: rgba(255,255,255,.2); }
+    .lock.admin { color: var(--yw); }
+    .admin-side { position: absolute; top: 10px; right: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; width: 232px; color: #fff; }
+    .lock:disabled { cursor: wait; opacity: .7; }
+    [data-header-field][contenteditable="plaintext-only"] { cursor: text; border-radius: 3px; outline: 1px dashed currentColor; outline-offset: 3px; min-width: 1em; }
+    [data-header-field]:focus { outline-style: solid; }
+    .header-save-error { width: 100%; margin: 0; font-size: 12px; color: #9a3b3b; }
     .last-updated {
-      color: rgba(255,255,255,.82);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      color: inherit;
       font-size: 10.5px;
       line-height: 1.45;
       font-weight: 700;
       text-align: right;
       white-space: normal;
     }
+    .updated-label, .updated-value { white-space: nowrap; }
     .internal-note {
+      grid-area: 2 / 2 / 3 / 3;
+      align-self: center;
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -108,16 +120,18 @@
       font-weight: 900;
     }
     .support-note {
-      margin-top: 4px;
+      grid-area: 3 / 1 / 4 / -1;
+      width: fit-content;
+      margin-top: 0;
       color: rgba(255,255,255,.86);
       background: rgba(26,44,34,.16);
       border: none;
       border-radius: 7px;
       padding: 3px 7px;
-      font-size: 11px;
+      font-size: 11.5px;
       line-height: 1.45;
       font-weight: 700;
-      max-width: 900px;
+      max-width: 100%;
     }
     .support-note .strong {
       color: var(--yw);
@@ -127,7 +141,8 @@
       text-decoration-thickness: 2px;
       text-underline-offset: 3px;
     }
-    .info { border-top: 1px solid rgba(255,255,255,.18); padding: 3px 0 5px; }
+    .info { padding: 0 0 5px; }
+    .info[hidden] { display: none; }
     .info-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; color: rgba(255,255,255,.84); font-size: 12.5px; }
     .pill { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 4px 11px; }
     .pill b { color: var(--yw-lt); font-weight: 700; margin-right: 4px; }
@@ -138,7 +153,11 @@
     .feature-module[hidden] { display: none !important; }
     .feature-module { position: relative; z-index: 30; margin-bottom: 18px; border: 2px solid var(--yw-dk); border-radius: 16px; background: linear-gradient(135deg, #fffdf4 0%, var(--yw-lt) 100%); box-shadow: 0 8px 26px rgba(201,162,39,.18); }
     .feature-module.open { position: fixed; top: 3vh; left: 50%; width: min(1180px, calc(100% - 40px)); height: min(94vh, 1040px); max-height: 94vh; transform: translateX(-50%); display: flex; flex-direction: column; margin: 0; overflow: hidden; border-radius: 18px; box-shadow: 0 24px 70px rgba(26,44,34,.3); }
-    .feature-toggle { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; color: var(--ink); padding: 17px 18px; text-align: left; }
+    .feature-toggle { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; color: var(--ink); padding: 13px 16px; text-align: left; }
+    .feature-hit-target { position: absolute; inset: 0; width: 100%; border: 0; border-radius: 14px; background: transparent; }
+    .feature-hit-target:focus-visible { outline: 2px solid var(--yw-dk); outline-offset: 3px; }
+    .feature-toggle > span { position: relative; pointer-events: none; }
+    .feature-toggle [contenteditable="plaintext-only"] { pointer-events: auto; }
     .feature-module.open .feature-toggle { flex: 0 0 auto; background: linear-gradient(135deg, #fffdf4 0%, var(--yw-lt) 100%); }
     .feature-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 12px; background: var(--yw-dk); color: #fff; font-size: 21px; box-shadow: 0 4px 12px rgba(201,162,39,.22); }
     .feature-title { flex: 1; min-width: 0; font-size: 20px; line-height: 1.35; font-weight: 900; overflow-wrap: anywhere; }
@@ -200,7 +219,7 @@
       box-shadow: var(--sh-card);
     }
     .search input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 15px; min-width: 0; color: var(--ink); font-weight: 700; }
-    .mobile-section-hint { display: none; }
+    .mobile-section-hint { margin: 10px 0 8px; color: var(--ink-s); font-size: 12px; line-height: 1.6; }
     .clear { border: 0; background: var(--gn-soft); color: var(--gn-deep); border-radius: 6px; padding: 4px 8px; }
     .tabs, .tags, .admin-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
     .tab, .tag {
@@ -342,6 +361,22 @@
     .body { padding: 0 16px 16px 34px; }
     .crumb { color: var(--ink-l); font-size: 11.5px; font-weight: 800; margin-bottom: 6px; }
     .content { color: var(--ink-s); font-size: 14px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .rich-text { white-space: normal; overflow-wrap: anywhere; }
+    .rich-text p, .rich-text div { margin: 0 0 .65em; }
+    .rich-text h2, .rich-text h3, .rich-text h4 { margin: .8em 0 .35em; color: inherit; line-height: 1.45; font-weight: 900; }
+    .rich-text h2 { font-size: 22px; }
+    .rich-text h3 { font-size: 19px; }
+    .rich-text h4 { font-size: 16px; }
+    .rich-text ul, .rich-text ol { margin: .45em 0 .8em; padding-left: 1.8em; }
+    .rich-text li { margin: .2em 0; }
+    .rich-text strong { font-weight: 900; }
+    .rich-text > :first-child { margin-top: 0; }
+    .rich-text > :last-child { margin-bottom: 0; }
+    .rich-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 7px; border: 1.5px solid var(--cr-bd); border-bottom: 0; border-radius: 9px 9px 0 0; background: var(--gn-soft); }
+    .rich-toolbar button, .rich-toolbar select { min-height: 30px; border: 1px solid var(--cr-bd); border-radius: 5px; padding: 4px 7px; background: #fff; color: var(--ink-s); font-size: 12px; font-weight: 700; }
+    .rich-toolbar button[aria-pressed="true"] { background: var(--gn-deep); border-color: var(--gn-deep); color: #fff; }
+    .field.rich-editor { min-height: 190px; max-height: 50vh; overflow-y: auto; border-radius: 0 0 9px 9px; font-size: 14px; line-height: 1.75; font-weight: 400; }
+    .rich-editor:empty::before { content: attr(data-placeholder); color: var(--ink-l); pointer-events: none; }
     .body-link { color: var(--gn-deep); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
     .body-link:hover { color: var(--gn); }
     .body-link:focus-visible { outline: 2px solid var(--gn); outline-offset: 3px; border-radius: 2px; }
@@ -445,36 +480,53 @@
     .lightbox-download { position: fixed; top: 18px; right: 72px; border: 1px solid rgba(255,255,255,.45); border-radius: 10px; background: rgba(255,255,255,.94); color: var(--gn-deep); padding: 9px 13px; font-size: 13px; font-weight: 900; }
     @media (max-width: 520px) {
       .wrap { width: min(100% - 24px, 1180px); }
-      h1 { font-size: 18px; line-height: 1.2; }
-      .head { flex-direction: column; padding: 8px 0 5px; gap: 6px; }
-      .title-line { min-height: 54px; padding-right: 132px; align-items: flex-start; }
-      .lock { min-width: 64px; padding: 3px 6px; font-size: 10px; }
-      .admin-side { top: 6px; right: 8px; width: 126px; padding: 4px 5px; }
-      .last-updated { min-width: 0; font-size: 9.5px; line-height: 1.25; }
-      main { padding-top: 12px; }
+      h1 { font-size: 25px; }
+      .head { flex-direction: column; padding: 12px 0 10px; gap: 8px; }
+      .lock { align-self: flex-end; }
+      .admin-side { align-self: stretch; min-width: 0; align-items: flex-end; }
+      .version-badge { font-size: 13px; }
+      .support-note .strong { font-size: 14px; }
       .row { grid-template-columns: 1fr; }
       .meta { align-items: flex-start; flex-direction: column; }
       .directory-title { font-size: 21px; }
       .feature-module.open { top: 12px; width: calc(100% - 24px); height: calc(100vh - 24px); max-height: calc(100vh - 24px); }
+      .feature-toggle { padding: 13px 14px; }
+      .feature-title { font-size: 17px; }
+      .feature-version-badge { padding: 4px 7px; font-size: 10.5px; }
+      .feature-detail { padding: 12px; }
+      .feature-panel { padding: 13px; }
+      .feature-poster-grid, .feature-poster-edit-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      .directory-columns { grid-template-columns: 1fr; }
+      .feature-editor-modal { width: 100%; }
+    }
+    @media (max-width: 520px) {
+      .head { padding: 8px 0 5px; gap: 0; }
+      .head > .header-main { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 6px; width: 100%; }
+      .title-line { grid-area: 1 / 1 / 2 / -1; display: flex; align-items: flex-start; min-height: 54px; padding-right: 132px; }
+      h1 { min-width: 0; margin-top: 0; font-size: 18px; line-height: 1.2; }
+      .version-line { grid-area: 2 / 1 / 3 / 2; align-self: center; }
+      .version-badge { padding: 2px 7px; font-size: 11px; }
+      .internal-note { grid-area: 2 / 2 / 3 / 3; align-self: center; margin-top: 0; padding: 2px 7px; border-radius: 7px; font-size: 11px; }
+      .support-note { grid-area: 3 / 1 / 4 / -1; margin-top: 0; padding: 3px 7px; border-radius: 7px; font-size: 11px; }
+      .support-note .strong { font-size: inherit; }
+      .admin-side { top: 8px; right: 0; width: 122px; }
+      .lock { min-width: 0; padding: 3px 7px; font-size: 10px; }
+      .last-updated { width: 100%; white-space: normal; font-size: 9.5px; line-height: 1.25; }
+      .info { padding: 3px 0 5px; }
+      main { padding-top: 12px; }
       .feature-module { margin-bottom: 12px; }
       .feature-toggle { padding: 10px 12px; gap: 8px; }
       .feature-icon { width: 28px; height: 28px; border-radius: 8px; font-size: 16px; }
       .feature-title { font-size: 15px; }
       .feature-version-badge { padding: 3px 6px; font-size: 10px; }
       .feature-arrow { font-size: 20px; }
-      .feature-detail { padding: 12px; }
-      .feature-panel { padding: 13px; }
-      .feature-poster-grid, .feature-poster-edit-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 820px) {
-      .title-line { min-height: 54px; }
       .mobile-section-hint { display: block; margin: 10px 0 8px; color: var(--ink-s); font-size: 12px; line-height: 1.6; }
       .tabs { flex-wrap: nowrap; gap: 4px; margin-top: 0; overflow-x: auto; }
       .tab { flex: 1 0 auto; min-height: 32px; padding: 6px; font-size: 12px; white-space: nowrap; }
       .tags { gap: 4px; margin-top: 10px; }
       .tag { padding: 5px 8px; font-size: 12px; }
-      .directory-columns { grid-template-columns: 1fr; }
-      .feature-editor-modal { width: 100%; }
     }
   </style>
 </head>
@@ -482,22 +534,20 @@
   <div class="top">
     <div class="wrap">
       <div class="head">
-        <div>
+        <div class="header-main">
+          <div class="version-line"><span id="versionBadge" class="version-badge">版本 <span id="headerVersion" data-header-field="version">读取中</span></span></div>
           <div class="title-line">
-            <h1>思悦云学习App最新信息查询</h1>
+            <h1 id="siteTitle" data-header-field="siteTitle">思悦云学习App最新信息查询</h1>
           </div>
-          <div class="header-meta">
-            <span id="versionBadge" class="version-badge">当前版本号：读取中</span>
-            <div class="internal-note">⚠ 仅内部使用，严禁发给家长</div>
-          </div>
+          <div class="internal-note">⚠ 仅内部使用，严禁发给家长</div>
           <div class="support-note">若问题仍无法解决，请将设备信息及<span class="strong">问题详细描述</span>发给Friday。感谢您的理解和支持。</div>
         </div>
         <div class="admin-side">
           <button id="loginBtn" class="lock" title="管理员窗口">管理员窗口</button>
-          <div id="lastUpdated" class="last-updated">网站最新更新日期：读取中</div>
+          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div>
         </div>
       </div>
-      <div class="info"><div id="infoRow" class="info-row"></div></div>
+      <div id="infoBar" class="info" hidden><div id="infoRow" class="info-row"></div></div>
     </div>
   </div>
 
@@ -506,7 +556,7 @@
     <section id="featureModule" class="feature-module" aria-label="App 最新功能"></section>
     <div class="search">
       <span>🔎</span>
-      <input id="query" placeholder="输入关键词，比如朗读、积分、希沃、音频">
+      <input id="query" placeholder="请输入问题相关关键词，比如朗读、积分、希沃、学习机">
       <button id="clearQuery" class="clear" hidden>×</button>
     </div>
     <p class="mobile-section-hint">手机端展示空间有限，如需查看智慧教室等专项通知，请在下方点击切换。</p>
@@ -538,7 +588,11 @@
     const isClubSection = (section) => section === CLUB_SECTION;
     const FEATURE_CATEGORY = "App最新功能";
     const PIN_KEYWORD_MARKER = "__KB_PINNED__";
-    const FEATURE_MODULE_TITLE = "思悦云学习 App 学生端最新版上新功能";
+    const FEATURE_MODULE_TITLE = "学生端最新版上新功能";
+    const SITE_TITLE = "思悦云学习App最新信息查询";
+    const HEADER_INFO_LABELS = { siteTitle: "网站标题", featureTitle: "上新功能标题", version: "当前最新版本号：" };
+    const RICH_CONTENT_PREFIX = "KB_RICH_TEXT_V1:";
+    const RICH_FONT_SIZES = [12, 14, 16, 18, 20, 24, 28, 32];
     const FEATURE_DATA_PREFIX = "FEATURE_ITEMS_V1:";
     const FEATURE_DATA_PREFIX_V2 = "FEATURE_DATA_V2:";
     const categories = ["报错", "优化更新", "情况说明"];
@@ -549,9 +603,17 @@
     const state = {
       items: [],
       info: [],
+      dataRevision: 0,
       lastUpdatedAt: "",
       adminPassword: localStorage.getItem("kb-admin-password") || "",
       isAdmin: false,
+      headerDraft: null,
+      headerBaseline: null,
+      headerSaving: false,
+      headerError: "",
+      featureSavedId: null,
+      featureSaving: false,
+      itemSaving: false,
       query: "",
       section: null,
       category: null,
@@ -571,6 +633,8 @@
     let toastTimer = null;
     let liveChannel = null;
     let videoSelectionToken = 0;
+    const richEditors = new Map();
+    let activeRichEditorId = "editContent";
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
@@ -601,6 +665,215 @@
       }
       return html + esc(text.slice(cursor));
     }
+    function decodeRichContent(value) {
+      if (!String(value ?? "").startsWith(RICH_CONTENT_PREFIX)) return null;
+      try {
+        const data = JSON.parse(String(value).slice(RICH_CONTENT_PREFIX.length));
+        return data && typeof data.html === "string" ? data.html : null;
+      } catch { return null; }
+    }
+
+    function sanitizeRichHtml(html, autoLinks = false) {
+      const template = document.createElement("template");
+      template.innerHTML = String(html ?? "");
+      const allowed = new Set(["p", "div", "br", "strong", "b", "u", "em", "i", "ul", "ol", "li", "h2", "h3", "h4", "span", "font", "a"]);
+      const blocked = new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "template", "form", "input", "textarea", "select", "button", "link", "meta", "base", "img", "video", "audio", "source"]);
+      const fontMap = { 1: 12, 2: 14, 3: 16, 4: 18, 5: 20, 6: 24, 7: 32 };
+      const cleanNode = (node, insideLink = false) => {
+        if (node.nodeType === 3) {
+          const value = node.textContent || "";
+          return (autoLinks && !insideLink ? linkifyText(value) : esc(value)).replace(/\r\n?|\n/g, "<br>");
+        }
+        if (node.nodeType !== 1) return "";
+        let tag = node.tagName.toLowerCase();
+        if (blocked.has(tag)) return "";
+        let href = "";
+        if (tag === "a") {
+          try {
+            const raw = (node.getAttribute("href") || "").trim();
+            const url = new URL(/^www\./i.test(raw) ? `https://${raw}` : raw);
+            if (["http:", "https:"].includes(url.protocol) && url.hostname) href = url.href;
+          } catch {}
+        }
+        const children = Array.from(node.childNodes).map((child) => cleanNode(child, insideLink || Boolean(href))).join("");
+        if (!allowed.has(tag)) return children;
+        if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
+        if (tag === "br") return "<br>";
+        const styles = [];
+        const cssSize = node.style.fontSize;
+        const size = /^\d+px$/.test(cssSize) ? Number.parseInt(cssSize, 10) : (tag === "font" ? fontMap[node.getAttribute("size")] : null);
+        if (RICH_FONT_SIZES.includes(size)) styles.push(`font-size:${size}px`);
+        if (["bold", "bolder"].includes(node.style.fontWeight) || Number(node.style.fontWeight) >= 600) styles.push("font-weight:bold");
+        else if (node.style.fontWeight === "normal" || node.style.fontWeight === "400") styles.push("font-weight:normal");
+        if ((node.style.textDecorationLine || node.style.textDecoration).split(/\s+/).includes("underline")) styles.push("text-decoration:underline");
+        tag = ({ b: "strong", i: "em", font: "span" })[tag] || tag;
+        if (tag === "span" && !styles.length) return children;
+        return `<${tag}${styles.length ? ` style="${styles.join(";")}"` : ""}>${children}</${tag}>`;
+      };
+      return Array.from(template.content.childNodes).map((node) => cleanNode(node)).join("");
+    }
+
+    function bodyContentText(value) {
+      const html = decodeRichContent(value);
+      if (html === null) return String(value ?? "");
+      const template = document.createElement("template");
+      template.innerHTML = sanitizeRichHtml(html);
+      const readNode = (node) => {
+        if (node.nodeType === 3) return node.textContent;
+        const tag = node.nodeType === 1 ? node.tagName.toLowerCase() : "";
+        if (tag === "br") return "\n";
+        const text = Array.from(node.childNodes).map(readNode).join("");
+        return text + (/^(p|div|li|ul|ol|h[234])$/.test(tag) ? "\n" : "");
+      };
+      return readNode(template.content).trim();
+    }
+
+    function encodeRichContent(html) {
+      const encoded = RICH_CONTENT_PREFIX + JSON.stringify({ html: sanitizeRichHtml(html) });
+      return bodyContentText(encoded) ? encoded : "";
+    }
+
+    function normalizeBodyContent(value) {
+      const html = decodeRichContent(value);
+      return html === null ? String(value ?? "") : encodeRichContent(html);
+    }
+
+    function renderBodyContent(value) {
+      const html = decodeRichContent(value);
+      return html === null ? linkifyText(value) : `<div class="rich-text">${sanitizeRichHtml(html, true)}</div>`;
+    }
+
+    function richEditorMarkup(editorId = "editContent") {
+      return `<div class="rich-toolbar" role="toolbar" aria-label="正文排版">
+        <select aria-label="段落样式" data-rich-style="block"><option value="" selected disabled>段落</option><option value="p">正文</option><option value="h2">一级标题</option><option value="h3">二级标题</option><option value="h4">三级标题</option></select>
+        <select aria-label="字体大小" data-rich-style="size"><option value="" selected disabled>字号</option>${RICH_FONT_SIZES.map((size) => `<option value="${size}">${size} px</option>`).join("")}</select>
+        <button type="button" data-rich-command="bold" aria-label="加粗" aria-pressed="false"><b>加粗</b></button>
+        <button type="button" data-rich-command="underline" aria-label="下划线" aria-pressed="false"><u>下划线</u></button>
+        <button type="button" data-rich-command="insertOrderedList" aria-label="编号列表" aria-pressed="false">1. 序号</button>
+        <button type="button" data-rich-command="insertUnorderedList" aria-label="圆点列表" aria-pressed="false">• 圆点</button>
+      </div><div id="${esc(editorId)}" class="field rich-editor rich-text" data-rich-editor contenteditable="true" role="textbox" aria-label="正文内容" aria-multiline="true" data-placeholder="写清楚具体的操作步骤"></div>`;
+    }
+
+    function richSelectionIsValid(range, editor) {
+      return range && editor && editor.contains(range.startContainer) && editor.contains(range.endContainer);
+    }
+
+    window.rememberRichSelection = () => {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      const anchor = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+      const editor = anchor?.closest("[data-rich-editor]");
+      if (!richSelectionIsValid(range, editor)) return;
+      const record = richEditors.get(editor.id);
+      if (!record) return;
+      activeRichEditorId = editor.id;
+      record.selection = range.cloneRange();
+      editor.previousElementSibling.querySelectorAll("[data-rich-command]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(document.queryCommandState(button.dataset.richCommand)));
+      });
+    };
+
+    function restoreRichSelection(editorId = activeRichEditorId) {
+      const editor = $(editorId);
+      if (!editor) return null;
+      const remembered = richEditors.get(editorId)?.selection?.cloneRange();
+      editor.focus();
+      const selection = window.getSelection();
+      const range = richSelectionIsValid(remembered, editor) ? remembered : document.createRange();
+      if (!richSelectionIsValid(range, editor)) { range.selectNodeContents(editor); range.collapse(false); }
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return editor;
+    }
+
+    window.applyRichFormat = (command, value, editorId = activeRichEditorId) => {
+      if (!state.isAdmin) return;
+      rememberRichSelection();
+      const editor = restoreRichSelection(editorId);
+      if (!editor) return;
+      const selection = window.getSelection();
+      const selectedRange = selection.getRangeAt(0);
+      const beforeText = editor.textContent;
+      const textOffset = (container, offset) => {
+        const prefix = document.createRange();
+        prefix.selectNodeContents(editor);
+        prefix.setEnd(container, offset);
+        return prefix.toString().length;
+      };
+      const bookmark = { start: textOffset(selectedRange.startContainer, selectedRange.startOffset), end: textOffset(selectedRange.endContainer, selectedRange.endOffset) };
+      document.execCommand("styleWithCSS", false, false);
+      if (command === "block" && ["p", "h2", "h3", "h4"].includes(value)) {
+        document.execCommand("formatBlock", false, value);
+      } else if (command === "size" && RICH_FONT_SIZES.includes(Number(value))) {
+        document.execCommand("fontSize", false, "7");
+        editor.querySelectorAll('font[size="7"]').forEach((font) => {
+          font.style.fontSize = `${Number(value)}px`;
+          font.removeAttribute("size");
+        });
+      } else if (["bold", "underline", "insertOrderedList", "insertUnorderedList"].includes(command)) {
+        document.execCommand(command, false);
+      }
+      // List commands can move the caret to the beginning of the new list item.
+      if (["insertOrderedList", "insertUnorderedList"].includes(command) && beforeText && editor.textContent === beforeText) {
+        const locate = (offset) => {
+          const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+          let node;
+          let remaining = offset;
+          while ((node = walker.nextNode())) {
+            if (remaining <= node.textContent.length) return [node, remaining];
+            remaining -= node.textContent.length;
+          }
+          return [editor, editor.childNodes.length];
+        };
+        const range = document.createRange();
+        range.setStart(...locate(bookmark.start));
+        range.setEnd(...locate(bookmark.end));
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      rememberRichSelection();
+      richEditors.get(editor.id)?.onChange?.(editedBodyContent(editor.id));
+    };
+
+    function setupRichEditor(content, editorId = "editContent", onChange = null) {
+      const editor = $(editorId);
+      const html = decodeRichContent(content);
+      editor.innerHTML = html === null ? esc(content).replace(/\r\n?|\n/g, "<br>") : sanitizeRichHtml(html);
+      richEditors.set(editorId, { originalContent: String(content ?? ""), initialHtml: editor.innerHTML, selection: null, onChange });
+      const toolbar = editor.previousElementSibling;
+      toolbar.querySelectorAll("button, select").forEach((control) => {
+        control.onpointerdown = (event) => { rememberRichSelection(); if (control.tagName === "BUTTON") event.preventDefault(); };
+        if (control.tagName === "BUTTON") control.onclick = () => applyRichFormat(control.dataset.richCommand, null, editorId);
+        else control.onchange = () => { applyRichFormat(control.dataset.richStyle, control.value, editorId); control.value = ""; };
+      });
+      const insertTransfer = (transfer) => {
+        const html = transfer?.getData("text/html");
+        const text = transfer?.getData("text/plain") || "";
+        const safe = html ? sanitizeRichHtml(html) : esc(text).replace(/\r\n?|\n/g, "<br>");
+        if (safe) document.execCommand("insertHTML", false, safe);
+        rememberRichSelection();
+        onChange?.(editedBodyContent(editorId));
+      };
+      editor.addEventListener("paste", (event) => { event.preventDefault(); insertTransfer(event.clipboardData); });
+      editor.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const range = document.caretRangeFromPoint?.(event.clientX, event.clientY);
+        if (richSelectionIsValid(range, editor)) { richEditors.get(editorId).selection = range; restoreRichSelection(editorId); }
+        insertTransfer(event.dataTransfer);
+      });
+      editor.addEventListener("input", () => { rememberRichSelection(); onChange?.(editedBodyContent(editorId)); });
+      editor.addEventListener("keyup", rememberRichSelection);
+      editor.addEventListener("mouseup", rememberRichSelection);
+    }
+
+    function editedBodyContent(editorId = "editContent") {
+      const editor = $(editorId);
+      const record = richEditors.get(editorId);
+      return editor.innerHTML === record?.initialHtml ? record.originalContent : encodeRichContent(editor.innerHTML);
+    }
+    document.addEventListener("selectionchange", rememberRichSelection);
+
     const colorForCategory = (c) => categoryColors[c] || "#6B6558";
     const colorForSection = (s) => sections.find((x) => x.key === s)?.color || "#6B6558";
     const colorForFixStatus = (s) => fixStatusColors[s] || "#6B8C7A";
@@ -731,12 +1004,14 @@
 
     async function loadAll() {
       if (loadPromise) return loadPromise;
+      const requestRevision = state.dataRevision || 0;
       loadPromise = (async () => {
         const [itemsRes, infoRes, metaRes] = await Promise.all([
           db.from("kb_items").select("*").order("created_at", { ascending: false }).order("id", { ascending: false }),
           db.from("kb_basic_info").select("*").order("sort_order", { ascending: true }),
           db.from("kb_site_meta").select("updated_at").eq("id", 1).maybeSingle()
         ]);
+        if (requestRevision !== (state.dataRevision || 0)) return;
         if (itemsRes.error || infoRes.error) {
           if (!state.items.length) {
             $("list").innerHTML = `<div class="empty">暂时无法读取内容，请稍后刷新页面。</div>`;
@@ -787,19 +1062,19 @@
       const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
       if (!feature) return [];
       const { version, posters, items } = parseFeatureData(feature);
-      const displayVersion = version || state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "";
+      const displayVersion = sharedVersion();
       return items.map((item, index) => ({
         id: `feature-search-${feature.id}-${index}`,
         section: "学生端",
         category: "当前最新版功能",
         title: item.title || `更新事项 ${index + 1}`,
-        content: [displayVersion ? `版本：${displayVersion}` : "", item.subtitle, item.content].filter(Boolean).join("\n"),
+        content: [displayVersion ? `版本：${displayVersion}` : "", item.subtitle, bodyContentText(item.content)].filter(Boolean).join("\n"),
         image_url: [
           ...(index === 0 ? posters.map((poster) => poster.image_url) : []),
           item.image_url
         ].filter(Boolean).join("\n"),
         video_url: "",
-        keywords: [FEATURE_MODULE_TITLE, "当前最新版功能", "上新", "海报", displayVersion, item.title, item.subtitle, item.content].filter(Boolean).join(" "),
+        keywords: [featureModuleTitle(), "当前最新版功能", "上新", "海报", displayVersion, item.title, item.subtitle, bodyContentText(item.content)].filter(Boolean).join(" "),
         created_at: feature.created_at,
         updated_at: feature.updated_at,
         _featureSearchResult: true,
@@ -816,7 +1091,7 @@
         return list.map((it, originalIndex) => {
           const haystack = [
             it.title,
-            it.content,
+            bodyContentText(it.content),
             it.fix_note,
             it.section,
             normalizeCategory(it.category),
@@ -858,10 +1133,10 @@
         return;
       }
       $("featureModule").hidden = false;
+      if (state.isAdmin && $("featureModule").contains(document.activeElement) && document.activeElement.matches("[data-header-field]")) return;
       const feature = state.items.find((it) => normalizeCategory(it.category) === FEATURE_CATEGORY);
       const { version, posters, items } = parseFeatureData(feature);
-      const fallbackVersion = state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "";
-      const displayVersion = version || fallbackVersion;
+      const displayVersion = sharedVersion();
       const posterCards = posters.map((poster, index) => `
         <div class="feature-poster-wrap">
           <button class="feature-poster-button" data-url="${esc(poster.image_url)}" data-alt="最新功能海报 ${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
@@ -875,7 +1150,7 @@
           <span class="feature-update-number">更新事项 ${index + 1}</span>
           <h3 class="feature-update-title">${esc(item.title || `更新事项 ${index + 1}`)}</h3>
           ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${linkifyText(item.subtitle)}</div>` : ""}
-          <div class="feature-update-content">${linkifyText(item.content || "暂无详细介绍。")}</div>
+          <div class="feature-update-content">${renderBodyContent(item.content || "暂无详细介绍。")}</div>
           ${item.image_url ? `<div class="feature-update-image">
             <button data-url="${esc(item.image_url)}" data-alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
               <img src="${esc(item.image_url)}" alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onerror="this.parentElement.parentElement.style.display='none'">
@@ -904,12 +1179,14 @@
       $("featureBackdrop").className = `feature-backdrop${state.featureOpen ? " show" : ""}`;
       $("featureBackdrop").setAttribute("aria-hidden", state.featureOpen ? "false" : "true");
       $("featureModule").innerHTML = `
-        <button id="featureToggle" class="feature-toggle" aria-expanded="${state.featureOpen}">
+        <div class="feature-toggle">
+          <button id="featureToggle" class="feature-hit-target" aria-expanded="${state.featureOpen}" aria-label="${esc(featureModuleTitle())}"></button>
           <span class="feature-icon">✨</span>
-          <span class="feature-title">${FEATURE_MODULE_TITLE}</span>
-          ${displayVersion ? `<span class="feature-version-badge">版本 ${esc(displayVersion)}</span>` : ""}
+          <span id="featureTitle" class="feature-title" data-header-field="featureTitle">${esc(featureModuleTitle())}</span>
+          ${displayVersion || state.isAdmin ? `<span class="feature-version-badge">版本 <span id="featureHeaderVersion" data-header-field="version">${esc(displayVersion)}</span></span>` : ""}
           <span class="feature-arrow">⌄</span>
-        </button>${state.featureOpen ? detail : ""}`;
+        </div>${state.featureOpen ? detail : ""}`;
+      syncHeaderFields();
       $("featureToggle").addEventListener("click", (event) => {
         event.stopPropagation();
         state.featureOpen = !state.featureOpen;
@@ -938,7 +1215,7 @@
       }
       state.featureOpen = false;
       renderFeature();
-      const displayVersion = version || state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "";
+      const displayVersion = sharedVersion();
       modal(`
         <div class="modal-title">一键转为学生端情况说明</div>
         <div class="hint">将把当前 ${meaningfulItems.length} 个更新事项分别生成普通的“学生端 · 情况说明”。版本号、正文和图片会保留，顶部海报会并入第一条内容。归档完成后会打开空白的新版本编辑页。</div>
@@ -954,14 +1231,17 @@
       try {
         const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
         const { version, posters, items } = parseFeatureData(feature);
-        const displayVersion = version || state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "";
+        const displayVersion = sharedVersion();
         const meaningfulItems = items.filter((item) => item.title.trim() || item.content.trim());
         if (!feature || !meaningfulItems.length) throw new Error("当前没有可归档的更新事项。");
         let createdCount = 0;
         for (let index = 0; index < meaningfulItems.length; index += 1) {
           const item = meaningfulItems[index];
           const title = item.title.trim() || `更新事项 ${index + 1}`;
-          const content = [displayVersion ? `版本：${displayVersion}` : "", item.subtitle.trim(), item.content.trim()].filter(Boolean).join("\n");
+          const prefix = [displayVersion ? `版本：${displayVersion}` : "", item.subtitle.trim()].filter(Boolean).join("\n");
+          const content = decodeRichContent(item.content) === null
+            ? [prefix, item.content.trim()].filter(Boolean).join("\n")
+            : encodeRichContent((prefix ? `<p>${esc(prefix).replace(/\n/g, "<br>")}</p>` : "") + decodeRichContent(item.content));
           const imageUrls = [
             ...(index === 0 ? posters.map((poster) => poster.image_url) : []),
             item.image_url
@@ -970,7 +1250,7 @@
             row.section === "学生端" &&
             normalizeCategory(row.category) === "情况说明" &&
             String(row.title || "").trim() === title &&
-            String(row.content || "").trim() === content
+            bodyContentText(row.content).trim() === bodyContentText(content).trim()
           );
           if (alreadyExists) continue;
           const res = await db.rpc("kb_admin_save_item_v2", {
@@ -984,7 +1264,7 @@
             p_fix_note: "",
             p_image_url: imageUrls.join("\n"),
             p_video_url: "",
-            p_keywords: [displayVersion, title, item.subtitle, item.content].filter(Boolean).join(" ")
+            p_keywords: [displayVersion, title, item.subtitle, bodyContentText(item.content)].filter(Boolean).join(" ")
           });
           if (res.error) throw res.error;
           const saved = Array.isArray(res.data) ? res.data[0] : res.data;
@@ -1014,7 +1294,8 @@
       const draft = resetForNewVersion
         ? { version: "", posters: [], items: Array.from({ length: 4 }, emptyFeatureItem) }
         : parseFeatureData(it.id ? it : null, true);
-      state.featureDraftVersion = resetForNewVersion ? "" : (draft.version || state.info.find((entry) => /版本/.test(entry.label || ""))?.value || "");
+      state.featureDraftVersion = resetForNewVersion ? "" : sharedVersion();
+      state.featureSavedId = it.id || null;
       state.featureDraftPosters = draft.posters;
       state.featureDraftItems = draft.items;
       modal(`
@@ -1055,13 +1336,14 @@
             <input class="field" value="${esc(item.title)}" placeholder="例如：积分商城全新上线" oninput="updateFeatureItem(${index}, 'title', this.value)">
             <label>副标题（选填，不填写则不显示）</label>
             <input class="field" value="${esc(item.subtitle)}" placeholder="例如：积分可兑换更多学习奖励" oninput="updateFeatureItem(${index}, 'subtitle', this.value)">
-            <label>正文内容</label>
-            <textarea class="field" placeholder="介绍功能内容、入口和使用方法" oninput="updateFeatureItem(${index}, 'content', this.value)">${esc(item.content)}</textarea>
+            <label for="featureContent${index}">正文内容</label>
+            ${richEditorMarkup(`featureContent${index}`)}
             <label>图片（限1张）</label>
             <input class="field" type="file" accept="image/*" onchange="selectFeatureItemImage(${index}, this)">
             ${preview ? `<div class="feature-edit-image-preview"><img src="${esc(preview)}" alt="更新事项${index + 1}图片"><button title="移除图片" onclick="removeFeatureItemImage(${index})">×</button></div>` : `<div class="hint" style="margin-top:6px">尚未选择图片</div>`}
           </section>`;
       }).join("");
+      state.featureDraftItems.forEach((item, index) => setupRichEditor(item.content, `featureContent${index}`, (content) => { item.content = content; }));
     }
 
     window.selectFeaturePosters = (input) => {
@@ -1143,8 +1425,12 @@
     const uploadFeatureItemImage = (item, index) => uploadFeatureAsset(item, `item-${index + 1}`);
 
     window.saveFeatureItems = async (event, id) => {
+      if (state.featureSaving) return;
+      state.featureSaving = true;
+      const releaseControls = lockModalForSave();
       const button = event?.currentTarget;
       if (button) button.disabled = true;
+      let contentSaved = false;
       try {
         $("editError").textContent = "正在上传海报和图片并保存…";
         if (state.featureDraftPosters.length > 3) throw new Error("海报最多上传3张。");
@@ -1156,63 +1442,185 @@
         if (!meaningfulItems.length) throw new Error("请至少填写一个更新事项。");
         const savedPosterUrls = [];
         for (let index = 0; index < state.featureDraftPosters.length; index += 1) {
-          const url = await uploadFeaturePoster(state.featureDraftPosters[index], index);
-          if (url) savedPosterUrls.push(url);
+          const poster = state.featureDraftPosters[index];
+          const url = await uploadFeaturePoster(poster, index);
+          if (url) {
+            savedPosterUrls.push(url);
+            poster.image_url = url;
+            poster.file = null;
+          }
         }
         const savedItems = [];
         for (let index = 0; index < meaningfulItems.length; index += 1) {
           const item = meaningfulItems[index];
-          if (!item.title.trim() || !item.content.trim()) throw new Error(`更新事项 ${index + 1} 需要填写主标题和正文内容。`);
+          if (!item.title.trim() || !bodyContentText(item.content).trim()) throw new Error(`更新事项 ${index + 1} 需要填写主标题和正文内容。`);
+          const imageUrl = await uploadFeatureItemImage(item, index);
+          item.image_url = imageUrl;
+          item.file = null;
           savedItems.push({
             title: item.title.trim(),
             subtitle: item.subtitle.trim(),
-            content: item.content.trim(),
-            image_url: await uploadFeatureItemImage(item, index)
+            content: normalizeBodyContent(item.content),
+            image_url: imageUrl
           });
         }
         const encodedContent = FEATURE_DATA_PREFIX_V2 + JSON.stringify({ version: savedVersion, posters: savedPosterUrls, items: savedItems });
         const res = await db.rpc("kb_admin_save_item_v2", {
           p_password: state.adminPassword,
-          p_id: id || null,
+          p_id: state.featureSavedId || id || null,
           p_section: "学生端",
           p_category: FEATURE_CATEGORY,
-          p_title: FEATURE_MODULE_TITLE,
+          p_title: featureModuleTitle(),
           p_content: encodedContent,
           p_fix_status: "修复中",
           p_fix_note: "",
           p_image_url: [...savedPosterUrls, ...savedItems.map((item) => item.image_url).filter(Boolean)].join("\n"),
           p_video_url: "",
-          p_keywords: [savedVersion, ...savedItems.flatMap((item) => [item.title, item.subtitle, item.content])].filter(Boolean).join(" ")
+          p_keywords: [savedVersion, ...savedItems.flatMap((item) => [item.title, item.subtitle, bodyContentText(item.content)])].filter(Boolean).join(" ")
         });
         if (res.error) throw res.error;
         const saved = Array.isArray(res.data) ? res.data[0] : res.data;
         if (saved?.id) {
+          state.featureSavedId = saved.id;
+          state.dataRevision = (state.dataRevision || 0) + 1;
           state.items = [saved, ...state.items.filter((item) => String(item.id) !== String(saved.id))];
         }
+        contentSaved = true;
+        await persistHeaderEdits({ version: savedVersion });
+        state.featureSaving = false;
         closeModal();
         state.featureOpen = true;
         render();
         showToast("海报与最新功能已保存");
         await loadAll();
       } catch (error) {
-        $("editError").textContent = `保存失败：${error.message || "请重新登录管理员窗口。"}`;
+        $("editError").textContent = `${contentSaved ? "海报和更新事项已保存，标题与版本同步失败，请重试保存" : "保存失败"}：${error.message || "请重新登录管理员窗口。"}`;
         if (button) button.disabled = false;
+      } finally {
+        state.featureSaving = false;
+        releaseControls();
       }
     };
 
+    function savedHeaderValues(rows = state.info) {
+      const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
+      return {
+        siteTitle: rows.find((row) => row.label === HEADER_INFO_LABELS.siteTitle)?.value || SITE_TITLE,
+        featureTitle: rows.find((row) => row.label === HEADER_INFO_LABELS.featureTitle)?.value || FEATURE_MODULE_TITLE,
+        version: rows.find((row) => /版本/.test(row.label || ""))?.value || parseFeatureData(feature).version || ""
+      };
+    }
+
+    function refreshHeaderDraft() {
+      if (!state.isAdmin) return;
+      const saved = savedHeaderValues();
+      if (!state.headerDraft) {
+        state.headerDraft = { ...saved };
+        state.headerBaseline = { ...saved };
+        return;
+      }
+      for (const key of Object.keys(HEADER_INFO_LABELS)) {
+        if (state.headerDraft[key] === state.headerBaseline[key]) {
+          state.headerDraft[key] = saved[key];
+          state.headerBaseline[key] = saved[key];
+        }
+      }
+    }
+
+    function headerValues() {
+      return state.isAdmin && state.headerDraft ? state.headerDraft : savedHeaderValues();
+    }
+
+    function sharedVersion() { return headerValues().version; }
+    function featureModuleTitle() { return headerValues().featureTitle; }
+
+    function syncHeaderFields() {
+      const values = headerValues();
+      document.querySelectorAll("[data-header-field]").forEach((node) => {
+        const key = node.dataset.headerField;
+        if (document.activeElement !== node) node.textContent = values[key] || (key === "version" && !state.isAdmin ? "未填写" : "");
+        node.contentEditable = state.isAdmin && !state.headerSaving ? "plaintext-only" : "false";
+        if (state.isAdmin) {
+          node.setAttribute("role", "textbox");
+          node.setAttribute("aria-label", ({ siteTitle: "网站标题", featureTitle: "上新功能标题", version: node.id === "headerVersion" ? "顶部版本号" : "上新功能版本号" })[key]);
+          node.setAttribute("aria-multiline", "false");
+          node.tabIndex = 0;
+        } else {
+          node.removeAttribute("role");
+          node.removeAttribute("aria-label");
+          node.removeAttribute("aria-multiline");
+          node.removeAttribute("tabindex");
+        }
+        node.oninput = () => {
+          if (!state.isAdmin || state.headerSaving) return;
+          state.headerDraft[key] = node.innerText.replace(/[\r\n]+/g, " ");
+          state.headerError = "";
+          syncHeaderFields();
+        };
+        node.onclick = (event) => { if (state.isAdmin) event.stopPropagation(); };
+        node.onkeydown = (event) => {
+          if (!state.isAdmin) return;
+          if (event.isComposing || event.keyCode === 229) return;
+          event.stopPropagation();
+          if (event.key === "Enter") { event.preventDefault(); node.blur(); }
+        };
+      });
+      document.title = values.siteTitle || SITE_TITLE;
+      $("featureToggle")?.setAttribute("aria-label", `${values.featureTitle}${values.version ? ` 版本 ${values.version}` : ""}`);
+    }
+
+    function mergeHeaderInfo(rows, changes) {
+      const merged = rows.map((row, index) => ({ label: row.label, value: row.value, sort_order: row.sort_order ?? index + 1 }));
+      for (const [key, value] of Object.entries(changes)) {
+        const index = merged.findIndex((row) => key === "version" ? /版本/.test(row.label || "") : row.label === HEADER_INFO_LABELS[key]);
+        if (index >= 0) merged[index].value = value;
+        else merged.push({ label: HEADER_INFO_LABELS[key], value, sort_order: Math.max(0, ...merged.map((row) => Number(row.sort_order) || 0)) + 1 });
+      }
+      return merged;
+    }
+
+    async function persistHeaderEdits(overrides = {}) {
+      if (!state.isAdmin) throw new Error("请先进入管理员窗口。");
+      refreshHeaderDraft();
+      Object.assign(state.headerDraft, overrides);
+      const snapshot = { ...state.headerDraft };
+      const changes = {};
+      for (const key of Object.keys(HEADER_INFO_LABELS)) {
+        if (snapshot[key] !== state.headerBaseline[key]) {
+          const value = String(snapshot[key]).trim();
+          if (!value) throw new Error(`${key === "version" ? "版本号" : HEADER_INFO_LABELS[key]}不能为空。`);
+          changes[key] = value;
+        }
+      }
+      if (!Object.keys(changes).length) return false;
+      const latest = await db.from("kb_basic_info").select("*").order("sort_order", { ascending: true });
+      if (latest.error) throw latest.error;
+      const rows = mergeHeaderInfo(latest.data || [], changes);
+      const result = await db.rpc("kb_admin_replace_basic_info_v2", { p_password: state.adminPassword, p_rows: rows });
+      if (result.error) throw result.error;
+      state.dataRevision = (state.dataRevision || 0) + 1;
+      state.info = rows;
+      const saved = savedHeaderValues(rows);
+      for (const key of Object.keys(HEADER_INFO_LABELS)) {
+        state.headerBaseline[key] = saved[key];
+        if (state.headerDraft[key] === snapshot[key]) state.headerDraft[key] = saved[key];
+      }
+      return true;
+    }
+
     function renderHeader() {
+      refreshHeaderDraft();
       $("loginBtn").className = state.isAdmin ? "lock admin" : "lock";
-      $("loginBtn").textContent = state.isAdmin ? "管理中" : "管理员窗口";
-      const versionInfo = state.info.find((f) => /版本/.test(f.label || ""));
-      $("versionBadge").textContent = `版本 ${versionInfo?.value || "未填写"}`;
-      $("lastUpdated").textContent = `网站最新更新日期：${dateTimeText(state.lastUpdatedAt)}`;
-      const visibleInfo = state.info.filter((f) => !/版本/.test(f.label || ""));
-      $("infoRow").innerHTML = "ⓘ " + visibleInfo.map((f) =>
+      $("loginBtn").textContent = state.headerSaving ? "保存中…" : state.isAdmin ? "退出管理" : "管理员窗口";
+      $("loginBtn").disabled = state.headerSaving;
+      $("loginBtn").title = state.isAdmin ? "保存标题与版本号并退出管理" : "管理员窗口";
+      $("lastUpdated").innerHTML = `<span class="updated-label">最近更新时间：</span><span class="updated-value">${esc(dateTimeText(state.lastUpdatedAt))}</span>`;
+      const visibleInfo = state.info.filter((f) => !/版本/.test(f.label || "") && !Object.values(HEADER_INFO_LABELS).includes(f.label));
+      $("infoBar").hidden = !visibleInfo.length;
+      $("infoRow").innerHTML = visibleInfo.map((f) =>
         `<span class="pill"><b>${esc(f.label)}</b>${esc(f.value)}</span>`
       ).join("");
-      if (state.isAdmin) {
-        $("infoRow").innerHTML += ` <button class="link-btn" onclick="openInfoEditor()">编辑</button>`;
-      }
+      syncHeaderFields();
     }
 
     function renderFilters() {
@@ -1248,7 +1656,9 @@
         <button class="primary warn" onclick="openImport()">批量导入</button>
         <button class="primary gray" onclick="copyBackup()">复制全部备份</button>
         <button class="primary gray" onclick="openPasswordEditor()">修改密码</button>
-        <button class="primary dark" onclick="logout()">退出管理</button>
+        ${$("infoBar").hidden ? "" : `<button class="primary gray" onclick="openInfoEditor()">编辑基础信息</button>`}
+        <button class="primary dark" onclick="logout()" ${state.headerSaving ? "disabled" : ""}>${state.headerSaving ? "保存中…" : "退出管理"}</button>
+        ${state.headerError ? `<p class="header-save-error" role="alert">${esc(state.headerError)}</p>` : ""}
       `;
     }
 
@@ -1382,14 +1792,14 @@
       const admin = state.isAdmin ? `
         <span>
           <button class="link-btn pin" onclick="togglePinnedItem('${it.id}', this)">${isPinned(it) ? "取消置顶" : "置顶"}</button>
-          <button class="link-btn" onclick='openEditor(${JSON.stringify(it).replaceAll("'", "&#039;")})'>编辑</button>
+          <button class="link-btn" onclick='openEditor(${esc(JSON.stringify(it))})'>编辑</button>
           <button class="link-btn danger" onclick="requestDeleteItem('${it.id}')">删除</button>
         </span>` : "";
       return `
         <div class="body">
           <div class="crumb">${esc(it.section)} ${showCategory && category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
           ${showCategory && category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${linkifyText(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
-          <div class="content">${linkifyText(it.content)}</div>
+          <div class="content">${renderBodyContent(it.content)}</div>
           ${media}
           <div class="meta"><span>最后更新时间 ${dateTimeText(it.updated_at || it.created_at)}</span>${admin}</div>
         </div>
@@ -1463,7 +1873,24 @@
       $("modalLayer").innerHTML = `<div class="${modalClass}"><button class="close" onclick="closeModal()">×</button>${html}</div>`;
       $("modalLayer").classList.add("show");
     }
+    function lockModalForSave() {
+      const currentModal = document.querySelector("#modalLayer .modal");
+      const controls = Array.from(currentModal?.querySelectorAll("button, input, select, textarea, [contenteditable='true']") || []).map((node) => ({ node, disabled: node.disabled, editable: node.getAttribute("contenteditable") }));
+      currentModal?.setAttribute("aria-busy", "true");
+      for (const { node, editable } of controls) {
+        if (editable !== null) node.contentEditable = "false";
+        else node.disabled = true;
+      }
+      return () => {
+        currentModal?.removeAttribute("aria-busy");
+        for (const { node, disabled, editable } of controls) {
+          if (editable !== null) node.setAttribute("contenteditable", editable);
+          else node.disabled = disabled;
+        }
+      };
+    }
     window.closeModal = () => {
+      if (state.featureSaving || state.itemSaving) return;
       const restoreFeatureModule = state.featureEditing;
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
       state.pendingImageFiles = [];
@@ -1475,6 +1902,7 @@
       for (const item of state.featureDraftItems) if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
       state.featureDraftItems = [];
       state.featureEditing = false;
+      richEditors.clear();
       $("modalLayer").classList.remove("show");
       $("modalLayer").innerHTML = "";
       if (restoreFeatureModule) renderFeature();
@@ -1507,13 +1935,29 @@
       render();
     };
 
-    function logoutAdmin() {
-      state.adminPassword = "";
-      state.isAdmin = false;
-      localStorage.removeItem("kb-admin-password");
-      closeModal();
-      render();
-      showToast("已退出管理");
+    async function logoutAdmin() {
+      if (state.headerSaving) return;
+      if (state.featureSaving || state.itemSaving) { showToast("正在保存，请完成后再退出管理"); return; }
+      state.headerSaving = true;
+      state.headerError = "";
+      renderHeader();
+      renderAdminTools();
+      try {
+        const saved = await persistHeaderEdits();
+        state.adminPassword = "";
+        state.isAdmin = false;
+        state.headerDraft = null;
+        state.headerBaseline = null;
+        localStorage.removeItem("kb-admin-password");
+        closeModal();
+        showToast(saved ? "标题与版本号已保存，已退出管理" : "已退出管理");
+      } catch (error) {
+        state.headerError = `标题与版本号尚未保存：${error.message || "请检查网络后重试。"} 请再次点击退出管理重试。`;
+        showToast("保存失败，已保留编辑内容和管理状态");
+      } finally {
+        state.headerSaving = false;
+        render();
+      }
     }
     window.logout = logoutAdmin;
 
@@ -1533,8 +1977,8 @@
         <select id="editSection" class="field" onchange="syncEditorSection()">${sections.map((s) => `<option ${it.section === s.key ? "selected" : ""}>${s.key}</option>`).join("")}</select>
         <label for="editTitle">标题</label>
         <input id="editTitle" class="field" type="text" autocomplete="off" value="${esc(it.title)}" placeholder="老师会怎么搜这个问题？">
-        <label>内容</label>
-        <textarea id="editContent" class="field" placeholder="写清楚具体的操作步骤">${esc(it.content)}</textarea>
+        <label for="editContent">正文内容</label>
+        ${richEditorMarkup()}
         <div id="categoryFields">
           <label>分类</label>
           <select id="editCategory" class="field" onchange="toggleFixFields()">
@@ -1563,6 +2007,7 @@
         <div id="editError" class="error"></div>
         <button class="primary" style="width:100%;margin-top:18px" onclick="saveItem('${it.id || ""}')">保存</button>
       `);
+      setupRichEditor(it.content);
       syncEditorSection();
       syncFixNote();
       renderMediaPreview("image");
@@ -1748,6 +2193,16 @@
     }
 
     window.saveItem = async (id) => {
+      if (state.itemSaving) return;
+      const title = $("editTitle").value.trim();
+      const content = editedBodyContent();
+      if (!title || !bodyContentText(content).trim()) {
+        $("editError").textContent = "标题和内容都要填写。";
+        return;
+      }
+      state.itemSaving = true;
+      const releaseControls = lockModalForSave();
+      try {
       const section = $("editSection").value;
       const category = isClubSection(section) ? "情况说明" : $("editCategory").value;
       let imageUrl;
@@ -1763,8 +2218,8 @@
       const row = {
         section,
         category,
-        title: $("editTitle").value.trim(),
-        content: $("editContent").value.trim(),
+        title,
+        content,
         fix_status: category === "报错" ? $("editFixStatus").value : "",
         fix_note: category === "报错" ? $("editFixNote").value.trim() : "",
         image_url: imageUrl,
@@ -1773,8 +2228,8 @@
       };
       const existingItem = state.items.find((item) => String(item.id) === String(id));
       const preservePin = isPinned(existingItem);
-      row.keywords = keywordsWithPin([row.title, row.content, row.fix_note].filter(Boolean).join(" "), preservePin);
-      if (!row.title || !row.content) {
+      row.keywords = keywordsWithPin([row.title, bodyContentText(row.content), row.fix_note].filter(Boolean).join(" "), preservePin);
+      if (!row.title || !bodyContentText(row.content).trim()) {
         $("editError").textContent = "标题和内容都要填写。";
         return;
       }
@@ -1806,6 +2261,7 @@
       }
       const saved = Array.isArray(res.data) ? res.data[0] : res.data;
       if (saved?.id) {
+        state.dataRevision = (state.dataRevision || 0) + 1;
         state.items = [saved, ...state.items.filter((item) => String(item.id) !== String(saved.id))]
           .sort((a, b) => {
             const timeDiff = new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -1814,10 +2270,18 @@
         state.expanded.add(String(saved.id));
         state.knownItemIds.add(String(saved.id));
       }
+      state.itemSaving = false;
       closeModal();
       render();
       showToast(id ? "内容已更新" : "内容已发布");
       await loadAll();
+      } catch (error) {
+        const message = $("editError");
+        if (message) message.textContent = `保存失败：${error.message || "请检查网络后重试。"}`;
+      } finally {
+        state.itemSaving = false;
+        releaseControls();
+      }
     };
 
     window.togglePinnedItem = async (id, button) => {
@@ -1923,13 +2387,14 @@
           row.fix_status = "";
           row.fix_note = "";
         }
-        row.keywords = keywordsWithPin([row.title, row.content, row.fix_note].filter(Boolean).join(" "), row.pinned);
+        row.content = normalizeBodyContent(row.content);
+        row.keywords = keywordsWithPin([row.title, bodyContentText(row.content), row.fix_note].filter(Boolean).join(" "), row.pinned);
         delete row.pinned;
         if (row.category === "报错" && normalizeFixStatus(row.fix_status) === "修复中" && !row.fix_note) {
           row.fix_note = DEFAULT_FIXING_NOTE;
         }
         return row;
-      }).filter((r) => r.title && r.content);
+      }).filter((r) => r.title && bodyContentText(r.content).trim());
     }
 
     window.openImport = () => {
