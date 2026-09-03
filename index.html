@@ -222,6 +222,7 @@
     .list { margin-top: 18px; }
     .directory-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
     .directory-columns .directory-section { min-width: 0; margin-top: 0; }
+    .directory-columns .club-section { grid-column: 1 / -1; }
     .directory-section { margin-top: 24px; }
     .directory-section:first-child { margin-top: 0; }
     .directory-head {
@@ -335,6 +336,9 @@
     .body { padding: 0 16px 16px 34px; }
     .crumb { color: var(--ink-l); font-size: 11.5px; font-weight: 800; margin-bottom: 6px; }
     .content { color: var(--ink-s); font-size: 14px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .body-link { color: var(--gn-deep); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+    .body-link:hover { color: var(--gn); }
+    .body-link:focus-visible { outline: 2px solid var(--gn); outline-offset: 3px; border-radius: 2px; }
     .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 112px)); gap: 9px; margin-top: 12px; }
     .media-thumb-wrap { position: relative; width: 100%; aspect-ratio: 1; border: 1.5px solid var(--cr-bd); border-radius: 8px; overflow: hidden; background: var(--gn-soft); }
     .media-thumb-btn { width: 100%; height: 100%; border: 0; padding: 0; background: transparent; }
@@ -506,10 +510,13 @@
     const SUPABASE_KEY = "sb_publishable_wQA_DET5R6qmYEOF02NlSg_Er-Jvk_I";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const CLUB_SECTION = "思悦 Club 资源汇总";
     const sections = [
       { key: "学生端", color: "#2E7D5A" },
-      { key: "智慧教室", color: "#C9A227" }
+      { key: "智慧教室", color: "#C9A227" },
+      { key: CLUB_SECTION, color: "#6B8C7A" }
     ];
+    const isClubSection = (section) => section === CLUB_SECTION;
     const FEATURE_CATEGORY = "App最新功能";
     const PIN_KEYWORD_MARKER = "__KB_PINNED__";
     const FEATURE_MODULE_TITLE = "思悦云学习 App 学生端最新版上新功能";
@@ -549,6 +556,33 @@
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
+    function linkifyText(value) {
+      const text = String(value ?? "");
+      const pattern = /(?:https?:\/\/|www\.)[^\s<>"'`，。；：！？、【】（）“”‘’《》]+/gi;
+      let html = "";
+      let cursor = 0;
+      for (const match of text.matchAll(pattern)) {
+        let label = match[0];
+        // Keep sentence punctuation outside links, while retaining balanced URL brackets.
+        while (label) {
+          const last = label.at(-1);
+          const opening = { ")": "(", "]": "[", "}": "{" }[last];
+          const unmatchedClose = opening && label.split(last).length > label.split(opening).length;
+          if (/[.,;:!?]/.test(last) || unmatchedClose) label = label.slice(0, -1);
+          else break;
+        }
+        html += esc(text.slice(cursor, match.index));
+        try {
+          const url = new URL(/^www\./i.test(label) ? `https://${label}` : label);
+          if (!["http:", "https:"].includes(url.protocol) || !url.hostname) throw new Error("Unsupported URL");
+          html += `<a class="body-link" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer" title="在新标签页打开">${esc(label)}</a>${esc(match[0].slice(label.length))}`;
+        } catch {
+          html += esc(match[0]);
+        }
+        cursor = match.index + match[0].length;
+      }
+      return html + esc(text.slice(cursor));
+    }
     const colorForCategory = (c) => categoryColors[c] || "#6B6558";
     const colorForSection = (s) => sections.find((x) => x.key === s)?.color || "#6B6558";
     const colorForFixStatus = (s) => fixStatusColors[s] || "#6B8C7A";
@@ -812,8 +846,8 @@
         <article id="feature-update-${index}" class="feature-update-card${state.featureFocusIndex === index ? " focus" : ""}">
           <span class="feature-update-number">更新事项 ${index + 1}</span>
           <h3 class="feature-update-title">${esc(item.title || `更新事项 ${index + 1}`)}</h3>
-          ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${esc(item.subtitle)}</div>` : ""}
-          <div class="feature-update-content">${esc(item.content || "暂无详细介绍。")}</div>
+          ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${linkifyText(item.subtitle)}</div>` : ""}
+          <div class="feature-update-content">${linkifyText(item.content || "暂无详细介绍。")}</div>
           ${item.image_url ? `<div class="feature-update-image">
             <button data-url="${esc(item.image_url)}" data-alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
               <img src="${esc(item.image_url)}" alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onerror="this.parentElement.parentElement.style.display='none'">
@@ -1158,6 +1192,11 @@
         `<button class="tab" onclick="setSection(null)" style="${!state.section ? "background:#2A2622;color:#FAF8F4" : ""}">全部</button>`,
         ...sections.map((s) => `<button class="tab" onclick="setSection('${s.key}')" style="border-color:${s.color};color:${state.section === s.key ? "#fff" : s.color};background:${state.section === s.key ? s.color : "#fff"}">${s.key}</button>`)
       ].join("");
+      $("tags").style.display = isClubSection(state.section) ? "none" : "";
+      if (isClubSection(state.section)) {
+        $("tags").innerHTML = "";
+        return;
+      }
       $("tags").innerHTML = [
         `<button class="tag" onclick="setCategory(null)" style="border-color:${colorForCategory("优化更新")};color:${state.category ? colorForCategory("优化更新") : "#fff"};background:${state.category ? "transparent" : colorForCategory("优化更新")}">全部类型</button>`,
         ...categories.map((c) => `<button class="tag" onclick="setCategory('${c}')" style="border-color:${colorForCategory(c)};color:${state.category === c ? "#fff" : colorForCategory(c)};background:${state.category === c ? colorForCategory(c) : "transparent"}">${c}</button>`)
@@ -1187,11 +1226,12 @@
 
     function renderList() {
       const list = filteredItems();
-      if (!list.length) {
+      const q = state.query.trim();
+      const showClubEmpty = !q && !state.category && !state.fixStatus && (!state.section || isClubSection(state.section));
+      if (!list.length && !showClubEmpty) {
         $("list").innerHTML = `<div class="empty">没找到相关内容，换个关键词试试</div>`;
         return;
       }
-      const q = state.query.trim();
       if (q) {
         $("list").innerHTML = `
           <div class="search-result-head">
@@ -1208,7 +1248,8 @@
         : sections;
       const directories = visibleSections.map((section) => {
         const sectionItems = list.filter((it) => it.section === section.key);
-        if (!sectionItems.length) return "";
+        const isClub = isClubSection(section.key);
+        if (!sectionItems.length && !(isClub && showClubEmpty)) return "";
         const pinnedItems = sectionItems.filter(isPinned);
         const regularSectionItems = sectionItems.filter((item) => !isPinned(item));
         const pinnedGroup = pinnedItems.length ? `
@@ -1217,7 +1258,7 @@
             ${pinnedItems.map(itemCard).join("")}
           </section>` : "";
         const visibleCategories = state.category ? [state.category] : categories;
-        const groups = pinnedGroup + visibleCategories.map((category) => {
+        const groups = pinnedGroup + (isClub ? regularSectionItems.map(itemCard).join("") : visibleCategories.map((category) => {
           const categoryItems = regularSectionItems.filter((it) => normalizeCategory(it.category) === category);
           if (!categoryItems.length) return "";
           return `
@@ -1231,18 +1272,18 @@
               ${categoryItems.map(itemCard).join("")}
             </section>
           `;
-        }).join("");
-        if (!groups) return "";
+        }).join(""));
+        if (!groups && !(isClub && showClubEmpty)) return "";
         return `
-          <section class="directory-section" aria-labelledby="${section.key}">
+          <section class="directory-section${isClub ? " club-section" : ""}" aria-labelledby="${isClub ? "club-resources" : section.key}">
             <div class="directory-head">
-              <h2 id="${section.key}" class="directory-title">
+              <h2 id="${isClub ? "club-resources" : section.key}" class="directory-title">
                 <span class="directory-mark" style="background:${section.color}"></span>
                 ${esc(section.key)}
               </h2>
               <span class="directory-count">${sectionItems.length} 条内容</span>
             </div>
-            ${groups}
+            ${groups || `<div class="empty">暂无资源</div>`}
           </section>
         `;
       }).join("");
@@ -1269,6 +1310,7 @@
       const open = state.expanded.has(String(it.id));
       const pinned = isPinned(it);
       const category = normalizeCategory(it.category);
+      const showCategory = !isClubSection(it.section);
       const status = normalizeFixStatus(it.fix_status);
       return `
         <article class="card${pinned ? " pinned" : ""}">
@@ -1276,11 +1318,11 @@
             <span class="dot" style="background:${colorForCategory(category)};margin-top:7px"></span>
             <span class="card-title-wrap">
               <span class="title">${esc(it.title)}</span>
-              <span class="mini-tags">
+              ${showCategory || pinned ? `<span class="mini-tags">
                 ${pinned ? `<span class="mini-tag pinned">📌 置顶</span>` : ""}
-                <span class="mini-tag ${category === "报错" ? "error" : ""}">${esc(category || "未分类")}</span>
-                ${category === "报错" ? `<span class="mini-tag" style="border-color:${colorForFixStatus(status)};color:${colorForFixStatus(status)}">${esc(status)}</span>` : ""}
-              </span>
+                ${showCategory ? `<span class="mini-tag ${category === "报错" ? "error" : ""}">${esc(category || "未分类")}</span>` : ""}
+                ${showCategory && category === "报错" ? `<span class="mini-tag" style="border-color:${colorForFixStatus(status)};color:${colorForFixStatus(status)}">${esc(status)}</span>` : ""}
+              </span>` : ""}
             </span>
             <span>${open ? "⌄" : "›"}</span>
           </button>
@@ -1291,6 +1333,7 @@
 
     function itemBody(it) {
       const category = normalizeCategory(it.category);
+      const showCategory = !isClubSection(it.section);
       const status = normalizeFixStatus(it.fix_status);
       const statusClass = status === "已修复" ? "fixed" : status === "后续优化" ? "future" : "fixing";
       const imageUrls = splitUrls(it.image_url);
@@ -1316,9 +1359,9 @@
         </span>` : "";
       return `
         <div class="body">
-          <div class="crumb">${esc(it.section)} ${category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
-          ${category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${esc(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
-          <div class="content">${esc(it.content)}</div>
+          <div class="crumb">${esc(it.section)} ${showCategory && category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
+          ${showCategory && category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${linkifyText(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
+          <div class="content">${linkifyText(it.content)}</div>
           ${media}
           <div class="meta"><span>最后更新时间 ${dateTimeText(it.updated_at || it.created_at)}</span>${admin}</div>
         </div>
@@ -1443,22 +1486,25 @@
       state.pendingImageFiles = [];
       videoSelectionToken += 1;
       clearPendingVideoFile();
-      const it = item || { section: "学生端", category: "报错", title: "", content: "", fix_status: "修复中", fix_note: DEFAULT_FIXING_NOTE, image_url: "", video_url: "", keywords: "" };
-      const itemCategory = normalizeCategory(it.category) || "报错";
+      const defaultSection = isClubSection(state.section) ? CLUB_SECTION : "学生端";
+      const it = item || { section: defaultSection, category: isClubSection(defaultSection) ? "情况说明" : "报错", title: "", content: "", fix_status: "修复中", fix_note: DEFAULT_FIXING_NOTE, image_url: "", video_url: "", keywords: "" };
+      const itemCategory = isClubSection(it.section) ? "情况说明" : normalizeCategory(it.category) || "报错";
       const itemFixStatus = normalizeFixStatus(it.fix_status);
       const itemFixNote = it.fix_note || (itemFixStatus === "修复中" ? DEFAULT_FIXING_NOTE : "");
       modal(`
         <div class="modal-title">${it.id ? "编辑内容" : "新增内容"}</div>
         <label>板块</label>
-        <select id="editSection" class="field">${sections.map((s) => `<option ${it.section === s.key ? "selected" : ""}>${s.key}</option>`).join("")}</select>
+        <select id="editSection" class="field" onchange="syncEditorSection()">${sections.map((s) => `<option ${it.section === s.key ? "selected" : ""}>${s.key}</option>`).join("")}</select>
         <label>标题</label>
         <input id="editTitle" class="field" value="${esc(it.title)}" placeholder="老师会怎么搜这个问题？">
         <label>内容</label>
         <textarea id="editContent" class="field" placeholder="写清楚具体的操作步骤">${esc(it.content)}</textarea>
-        <label>分类</label>
-        <select id="editCategory" class="field" onchange="toggleFixFields()">
-          ${categories.map((c) => `<option ${itemCategory === c ? "selected" : ""}>${c}</option>`).join("")}
-        </select>
+        <div id="categoryFields">
+          <label>分类</label>
+          <select id="editCategory" class="field" onchange="toggleFixFields()">
+            ${categories.map((c) => `<option ${itemCategory === c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
         <div id="fixFields">
           <label>当前修复状态</label>
           <select id="editFixStatus" class="field" onchange="syncFixNote()">
@@ -1481,10 +1527,29 @@
         <div id="editError" class="error"></div>
         <button class="primary" style="width:100%;margin-top:18px" onclick="saveItem('${it.id || ""}')">保存</button>
       `);
-      toggleFixFields();
+      syncEditorSection();
       syncFixNote();
       renderMediaPreview("image");
       renderMediaPreview("video");
+    };
+
+    window.syncEditorSection = () => {
+      const isClub = isClubSection($("editSection")?.value);
+      const categoryField = $("editCategory");
+      if (!categoryField) return;
+      $("categoryFields").hidden = isClub;
+      if (isClub) {
+        if (!categoryField.disabled) categoryField.dataset.categoryBeforeClub = categoryField.value;
+        categoryField.value = "情况说明";
+        categoryField.disabled = true;
+      } else {
+        if (categoryField.disabled && categories.includes(categoryField.dataset.categoryBeforeClub)) {
+          categoryField.value = categoryField.dataset.categoryBeforeClub;
+        }
+        categoryField.disabled = false;
+        delete categoryField.dataset.categoryBeforeClub;
+      }
+      toggleFixFields();
     };
 
     window.toggleFixFields = () => {
@@ -1647,7 +1712,8 @@
     }
 
     window.saveItem = async (id) => {
-      const category = $("editCategory").value;
+      const section = $("editSection").value;
+      const category = isClubSection(section) ? "情况说明" : $("editCategory").value;
       let imageUrl;
       let videoUrl;
       try {
@@ -1659,7 +1725,7 @@
         return;
       }
       const row = {
-        section: $("editSection").value,
+        section,
         category,
         title: $("editTitle").value.trim(),
         content: $("editContent").value.trim(),
@@ -1815,6 +1881,11 @@
           else if (key === "图片") row.image_url = value;
           else if (key === "视频") row.video_url = value;
           else if (key === "置顶") row.pinned = /^(是|true|1|yes)$/i.test(value);
+        }
+        if (isClubSection(row.section)) {
+          row.category = "情况说明";
+          row.fix_status = "";
+          row.fix_note = "";
         }
         row.keywords = keywordsWithPin([row.title, row.content, row.fix_note].filter(Boolean).join(" "), row.pinned);
         delete row.pinned;
