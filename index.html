@@ -358,8 +358,11 @@
     .status-panel.fixing { border-left-color: #c9a227; background: #fff8dc; }
     .status-panel.fixed { border-left-color: #2e7d5a; }
     .status-panel.future { border-left-color: #52a882; }
+    .item-admin-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 8px 16px 0 34px; font-size: 12px; }
     .body { padding: 0 16px 16px 34px; }
-    .crumb { color: var(--ink-l); font-size: 11.5px; font-weight: 800; margin-bottom: 6px; }
+    .item-info-row { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; margin-bottom: 6px; }
+    .crumb { color: var(--ink-l); font-size: 11.5px; font-weight: 800; }
+    .item-updated { color: var(--ink-l); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
     .content { color: var(--ink-s); font-size: 14px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
     .rich-text { white-space: normal; overflow-wrap: anywhere; }
     .rich-text p, .rich-text div { margin: 0 0 .65em; }
@@ -390,7 +393,6 @@
     .video-player { display: block; width: 100%; max-height: 480px; border: 1.5px solid var(--cr-bd); border-radius: 10px; background: #101813; }
     .video-player-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .video-player-actions .video-link { margin-top: 0; }
-    .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink-l); font-size: 12px; margin-top: 12px; }
     .link-btn { border: 0; background: transparent; color: var(--gn-deep); font-weight: 800; padding: 0; }
     .link-btn.pin { color: #8b6c00; }
     .link-btn.danger { color: #9a3b3b; }
@@ -418,6 +420,8 @@
       box-shadow: 0 6px 36px rgba(46,125,90,.15);
     }
     .modal.narrow { width: min(370px, 100%); }
+    .delete-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+    .delete-actions .primary { width: 100%; }
     .close { position: absolute; top: 14px; right: 14px; border: 0; background: var(--gn-soft); color: var(--gn-deep); border-radius: 8px; padding: 6px 9px; font-weight: 900; }
     .modal-title { font-family: "Baloo 2", "PingFang SC", sans-serif; color: var(--gn-deep); font-size: 18px; font-weight: 800; margin-bottom: 16px; }
     label { display: block; color: var(--ink-l); font-size: 11px; font-weight: 900; margin: 14px 0 6px; letter-spacing: .08em; }
@@ -487,7 +491,7 @@
       .version-badge { font-size: 13px; }
       .support-note .strong { font-size: 14px; }
       .row { grid-template-columns: 1fr; }
-      .meta { align-items: flex-start; flex-direction: column; }
+      .item-admin-actions { justify-content: flex-start; padding: 8px 12px 0 34px; }
       .directory-title { font-size: 21px; }
       .feature-module.open { top: 12px; width: calc(100% - 24px); height: calc(100vh - 24px); max-height: calc(100vh - 24px); }
       .feature-toggle { padding: 13px 14px; }
@@ -614,6 +618,7 @@
       featureSavedId: null,
       featureSaving: false,
       itemSaving: false,
+      itemDeleting: false,
       query: "",
       section: null,
       category: null,
@@ -881,6 +886,11 @@
     const normalizeFixStatus = (s) => fixStatuses.includes(s) ? s : "修复中";
     const isVideoUrl = (u) => /\.(mp4|webm|mov|m4v|ogv|ogg)(\?.*)?$/i.test(u || "");
     const dateText = (d) => d ? new Date(d).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" }) : "—";
+    const yearMonthText = (value) => {
+      if (!value) return "暂无记录";
+      const d = new Date(value);
+      return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+    };
     const dateTimeText = (value) => {
       if (!value) return "暂无记录";
       const d = new Date(value);
@@ -1750,8 +1760,15 @@
       const category = normalizeCategory(it.category);
       const showCategory = !isClubSection(it.section);
       const status = normalizeFixStatus(it.fix_status);
+      const adminActions = state.isAdmin ? `
+        <div class="item-admin-actions" aria-label="词条管理操作">
+          <button class="link-btn pin" onclick="togglePinnedItem('${it.id}', this)">${pinned ? "取消置顶" : "置顶"}</button>
+          <button class="link-btn" onclick='openEditor(${esc(JSON.stringify(it))})'>编辑</button>
+          <button class="link-btn danger" onclick="requestDeleteItem('${it.id}')">删除</button>
+        </div>` : "";
       return `
         <article class="card${pinned ? " pinned" : ""}">
+          ${adminActions}
           <button class="card-head" onclick="toggleItem('${it.id}')" aria-expanded="${open}">
             <span class="dot" style="background:${colorForCategory(category)};margin-top:7px"></span>
             <span class="card-title-wrap">
@@ -1789,19 +1806,19 @@
           <div class="video-player-actions"><a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">↗ 打开原视频</a></div>
         </div>` : `<a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>`;
       const media = imageGrid + videoMedia;
-      const admin = state.isAdmin ? `
-        <span>
-          <button class="link-btn pin" onclick="togglePinnedItem('${it.id}', this)">${isPinned(it) ? "取消置顶" : "置顶"}</button>
-          <button class="link-btn" onclick='openEditor(${esc(JSON.stringify(it))})'>编辑</button>
-          <button class="link-btn danger" onclick="requestDeleteItem('${it.id}')">删除</button>
-        </span>` : "";
+      const updatedAt = it.updated_at || it.created_at;
+      const updatedLabel = state.isAdmin
+        ? `更新时间：${dateTimeText(updatedAt)}`
+        : `更新日期：${yearMonthText(updatedAt)}`;
       return `
         <div class="body">
-          <div class="crumb">${esc(it.section)} ${showCategory && category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
+          <div class="item-info-row">
+            <div class="crumb">${esc(it.section)} ${showCategory && category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
+            <span class="item-updated">${esc(updatedLabel)}</span>
+          </div>
           ${showCategory && category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${linkifyText(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
           <div class="content">${renderBodyContent(it.content)}</div>
           ${media}
-          <div class="meta"><span>最后更新时间 ${dateTimeText(it.updated_at || it.created_at)}</span>${admin}</div>
         </div>
       `;
     }
@@ -1890,7 +1907,7 @@
       };
     }
     window.closeModal = () => {
-      if (state.featureSaving || state.itemSaving) return;
+      if (state.featureSaving || state.itemSaving || state.itemDeleting) return;
       const restoreFeatureModule = state.featureEditing;
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
       state.pendingImageFiles = [];
@@ -1937,7 +1954,7 @@
 
     async function logoutAdmin() {
       if (state.headerSaving) return;
-      if (state.featureSaving || state.itemSaving) { showToast("正在保存，请完成后再退出管理"); return; }
+      if (state.featureSaving || state.itemSaving || state.itemDeleting) { showToast("正在处理，请完成后再退出管理"); return; }
       state.headerSaving = true;
       state.headerError = "";
       renderHeader();
@@ -2336,27 +2353,37 @@
         <div class="hint">删除后无法恢复，请确认要删除下面这条内容：</div>
         <div class="status-panel" style="margin-top:12px"><b>${esc(item.title)}</b></div>
         <div id="deleteError" class="error"></div>
-        <button id="confirmDeleteBtn" class="primary" style="width:100%;margin-top:18px;background:#9a3b3b" onclick="confirmDeleteItem('${item.id}')">确认删除</button>
+        <div class="delete-actions">
+          <button class="primary gray" onclick="closeModal()">取消</button>
+          <button id="confirmDeleteBtn" class="primary" style="background:#9a3b3b" onclick="confirmDeleteItem('${item.id}')">确认删除</button>
+        </div>
       `, true);
     };
 
     window.confirmDeleteItem = async (id) => {
+      if (state.itemDeleting) return;
       const button = $("confirmDeleteBtn");
-      button.disabled = true;
+      if (!button) return;
+      state.itemDeleting = true;
+      const releaseControls = lockModalForSave();
       button.textContent = "正在删除…";
-      const { error } = await db.rpc("kb_admin_delete_item_v2", { p_password: state.adminPassword, p_id: id });
-      if (error) {
-        $("deleteError").textContent = `删除失败：${error.message || "请重新登录管理员窗口。"}`;
-        button.disabled = false;
+      try {
+        const { error } = await db.rpc("kb_admin_delete_item_v2", { p_password: state.adminPassword, p_id: id });
+        if (error) throw error;
+        state.items = state.items.filter((item) => String(item.id) !== String(id));
+        state.expanded.delete(String(id));
+        state.itemDeleting = false;
+        closeModal();
+        render();
+        showToast("内容已删除");
+        await loadAll();
+      } catch (error) {
+        state.itemDeleting = false;
+        releaseControls();
+        const message = $("deleteError");
+        if (message) message.textContent = `删除失败：${error.message || "请重新登录管理员窗口。"}`;
         button.textContent = "确认删除";
-        return;
       }
-      state.items = state.items.filter((item) => String(item.id) !== String(id));
-      state.expanded.delete(String(id));
-      closeModal();
-      render();
-      showToast("内容已删除");
-      await loadAll();
     };
 
     function parseImportText(text) {
