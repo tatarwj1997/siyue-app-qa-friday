@@ -4,7 +4,50 @@
   <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>思悦云学习App最新信息查询</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Compatibility adapter: keep the existing UI and editor unchanged.
+window.siyueCloud = {createClient(base, unused, options={}) {
+  let pending=null, last=null, expires=0;
+  const headers=options.global?.headers||{};
+  const request=async(path,init={})=>{
+    try {
+      const response=await fetch(base+path,{...init,headers:{...headers,...init.headers}});
+      const data=await response.json();
+      return response.ok?{data,error:null}:{data:null,error:{message:data.message||'请求失败'}};
+    }catch(error){return {data:null,error:{message:error.message}};}
+  };
+  const all=()=>{
+    if(last&&Date.now()<expires)return Promise.resolve(last);
+    if(!pending)pending=request('/data').then(result=>{last=result;expires=Date.now()+200;return result;}).finally(()=>{pending=null;});
+    return pending;
+  };
+  return {
+    from(table){
+      let single=false;const filters=[];const orders=[];
+      const query={
+        select(){return query;},
+        order(key,options){orders.push([key,options?.ascending!==false]);return query;},
+        eq(key,value){filters.push([key,value]);return query;},
+        maybeSingle(){single=true;return query;},
+        then(resolve,reject){return all().then(result=>{
+          if(result.error)return result;
+          let rows=[...(result.data[table]||[])].filter(r=>filters.every(([k,v])=>String(r[k])===String(v)));
+          rows.sort((a,b)=>{for(const [k,asc] of orders){const diff=typeof a[k]==='number'?a[k]-b[k]:String(a[k]).localeCompare(String(b[k]));if(diff)return asc?diff:-diff;}return 0;});
+          return {data:single?(rows[0]||null):rows,error:null};
+        }).then(resolve,reject);}
+      };return query;
+    },
+    async rpc(name,params){const result=await request('/rpc/'+name,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});last=null;expires=0;return result;},
+    // Existing ten-second polling, focus and visibility refresh remain active.
+    channel(){const channel={on(){return channel;},subscribe(){return channel;}};return channel;},
+    storage:{from(){return {
+      upload(path,file,opts={}){return request('/media/'+path.split('/').map(encodeURIComponent).join('/'),{method:'PUT',headers:{'Content-Type':opts.contentType||file.type},body:file});},
+      getPublicUrl(path){return {data:{publicUrl:base+'/media/'+path.split('/').map(encodeURIComponent).join('/')}};}
+    };}}
+  };
+}};
+
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -579,9 +622,9 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const SUPABASE_URL = "https://axtvwtlkvehtdnsdavkx.supabase.co";
+    const SUPABASE_URL = "https://siyue-app-qa-friday.tatarwj1997.chatgpt.site/kb-api";
     const SUPABASE_KEY = "sb_publishable_wQA_DET5R6qmYEOF02NlSg_Er-Jvk_I";
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const CLUB_SECTION = "思悦 Club 资源汇总";
     const sections = [
@@ -1419,7 +1462,7 @@
     async function uploadFeatureAsset(entry, label) {
       if (!entry.file) return entry.image_url || "";
       const path = `images/${Date.now()}-${label}-${Math.random().toString(36).slice(2, 8)}-${safeFileName(entry.file.name)}`;
-      const adminDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      const adminDb = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY, {
         global: { headers: { "x-kb-admin-password": state.adminPassword } }
       });
       const { error } = await adminDb.storage.from("kb-media").upload(path, entry.file, {
@@ -2179,7 +2222,7 @@
       const uploadedUrls = [];
       for (const file of files) {
         const path = `images/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeFileName(file.name)}`;
-        const adminDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        const adminDb = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY, {
           global: { headers: { "x-kb-admin-password": state.adminPassword } }
         });
         const { error } = await adminDb.storage.from("kb-media").upload(path, file, {
@@ -2197,7 +2240,7 @@
       if (!state.pendingVideoFile) return $("editVideo").value.trim();
       const file = state.pendingVideoFile.file;
       const path = `videos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeFileName(file.name)}`;
-      const adminDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      const adminDb = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY, {
         global: { headers: { "x-kb-admin-password": state.adminPassword } }
       });
       const { error } = await adminDb.storage.from("kb-media").upload(path, file, {
