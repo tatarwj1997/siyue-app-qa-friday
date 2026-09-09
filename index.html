@@ -645,7 +645,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const SUPABASE_URL = "https://siyue-kb-api.siyue-tatarwj1997.workers.dev";
+    const SUPABASE_URL = "https://siyue-kb-gateway.pages.dev";
     const SUPABASE_KEY = "sb_publishable_wQA_DET5R6qmYEOF02NlSg_Er-Jvk_I";
     const db = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1001,8 +1001,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     });
     const mediaUrl = (value) => {
       const url = String(value || "");
-      const previous = "https://siyue-app-qa-friday.tatarwj1997.chatgpt.site/kb-api/media/";
-      return url.startsWith(previous) ? SUPABASE_URL + "/media/" + url.slice(previous.length) : url;
+      const previous = [
+        "https://siyue-app-qa-friday.tatarwj1997.chatgpt.site/kb-api/media/",
+        "https://siyue-kb-api.siyue-tatarwj1997.workers.dev/media/"
+      ].find(prefix => url.startsWith(prefix));
+      return previous ? SUPABASE_URL + "/media/" + url.slice(previous.length) : url;
     };
     const splitUrls = (value) => String(value || "").split(/\n+/).map((u) => u.trim()).filter(Boolean);
     const stripPinMarker = (value) => String(value || "").split(/\s+/).filter((token) => token && token !== PIN_KEYWORD_MARKER).join(" ");
