@@ -10,7 +10,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
   let pending=null, last=null, expires=0;
   const headers=options.global?.headers||{};
 
-  const backupBase = "https://siyue-kb-api.siyue-tatarwj1997.workers.dev";
   const valid = data => data && ["kb_items","kb_basic_info","kb_site_meta"].every(key => Array.isArray(data[key]));
   const fetchOne = async (endpoint, path, init, timeout) => {
     const controller = new AbortController();
@@ -24,15 +23,15 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     } finally { clearTimeout(timer); }
   };
   const request = async (path, init = {}) => {
-    // Both endpoints read and write the same Cloudflare D1 database.
+    // Direct connection to the owner-managed Cloudflare D1/R2 backend.
     if (path !== "/data") {
       // Never retry a write: a timeout may happen after the server saved it.
       return fetchOne(window.siyueActiveEndpoint || base, path, init, 30000);
     }
-    const endpoints = [...new Set([window.siyueActiveEndpoint || base, base, backupBase])];
+    const endpoints = [base];
     let result;
     for (const endpoint of endpoints) {
-      result = await fetchOne(endpoint, path, init, 4000);
+      result = await fetchOne(endpoint, path, init, 15000);
       if (!result.error && valid(result.data)) {
         window.siyueActiveEndpoint = endpoint;
         return result;
@@ -646,7 +645,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const SUPABASE_URL = "https://siyue-app-qa-friday.tatarwj1997.chatgpt.site/kb-api";
+    const SUPABASE_URL = "https://siyue-kb-api.siyue-tatarwj1997.workers.dev";
     const SUPABASE_KEY = "sb_publishable_wQA_DET5R6qmYEOF02NlSg_Er-Jvk_I";
     const db = window.siyueCloud.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -729,7 +728,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         try {
           const url = new URL(/^www\./i.test(label) ? `https://${label}` : label);
           if (!["http:", "https:"].includes(url.protocol) || !url.hostname) throw new Error("Unsupported URL");
-          html += `<a class="body-link" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer" title="在新标签页打开">${esc(label)}</a>${esc(match[0].slice(label.length))}`;
+          html += `<a class="body-link" href="${esc(mediaUrl(url.href))}" target="_blank" rel="noopener noreferrer" title="在新标签页打开">${esc(label)}</a>${esc(match[0].slice(label.length))}`;
         } catch {
           html += esc(match[0]);
         }
@@ -769,7 +768,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         }
         const children = Array.from(node.childNodes).map((child) => cleanNode(child, insideLink || Boolean(href))).join("");
         if (!allowed.has(tag)) return children;
-        if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
+        if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(mediaUrl(href))}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
         if (tag === "br") return "<br>";
         const styles = [];
         const cssSize = node.style.fontSize;
@@ -1000,6 +999,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       video.onerror = () => finish(reject, new Error("无法读取视频，请换成 MP4、MOV 或 WebM 格式。"));
       video.src = objectUrl;
     });
+    const mediaUrl = (value) => {
+      const url = String(value || "");
+      const previous = "https://siyue-app-qa-friday.tatarwj1997.chatgpt.site/kb-api/media/";
+      return url.startsWith(previous) ? SUPABASE_URL + "/media/" + url.slice(previous.length) : url;
+    };
     const splitUrls = (value) => String(value || "").split(/\n+/).map((u) => u.trim()).filter(Boolean);
     const stripPinMarker = (value) => String(value || "").split(/\s+/).filter((token) => token && token !== PIN_KEYWORD_MARKER).join(" ");
     const isPinned = (item) => String(item?.keywords || "").split(/\s+/).includes(PIN_KEYWORD_MARKER);
@@ -1216,11 +1220,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const displayVersion = sharedVersion();
       const posterCards = posters.map((poster, index) => `
         <div class="feature-poster-wrap">
-          <button class="feature-poster-button" data-url="${esc(poster.image_url)}" data-alt="最新功能海报 ${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
-            <img class="feature-poster" src="${esc(poster.image_url)}" alt="最新功能海报 ${index + 1}" onerror="this.parentElement.parentElement.style.display='none'">
+          <button class="feature-poster-button" data-url="${esc(mediaUrl(poster.image_url))}" data-alt="最新功能海报 ${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
+            <img class="feature-poster" src="${esc(mediaUrl(poster.image_url))}" alt="最新功能海报 ${index + 1}" onerror="this.parentElement.parentElement.style.display='none'">
           </button>
           <span class="feature-poster-label">海报 ${index + 1} · 点击预览</span>
-          <button class="image-download" data-url="${esc(poster.image_url)}" data-name="最新功能海报${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
+          <button class="image-download" data-url="${esc(mediaUrl(poster.image_url))}" data-name="最新功能海报${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
         </div>`).join("");
       const itemCards = items.map((item, index) => `
         <article id="feature-update-${index}" class="feature-update-card${state.featureFocusIndex === index ? " focus" : ""}">
@@ -1229,10 +1233,10 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${linkifyText(item.subtitle)}</div>` : ""}
           <div class="feature-update-content">${renderBodyContent(item.content || "暂无详细介绍。")}</div>
           ${item.image_url ? `<div class="feature-update-image">
-            <button data-url="${esc(item.image_url)}" data-alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
-              <img src="${esc(item.image_url)}" alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onerror="this.parentElement.parentElement.style.display='none'">
+            <button data-url="${esc(mediaUrl(item.image_url))}" data-alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
+              <img src="${esc(mediaUrl(item.image_url))}" alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onerror="this.parentElement.parentElement.style.display='none'">
             </button>
-            <button class="image-download" data-url="${esc(item.image_url)}" data-name="${esc(item.title || `更新事项${index + 1}`)}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
+            <button class="image-download" data-url="${esc(mediaUrl(item.image_url))}" data-name="${esc(item.title || `更新事项${index + 1}`)}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
           </div>` : ""}
         </article>`).join("");
       const posterSection = posters.length ? `
@@ -1402,7 +1406,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       posterInput.value = "";
       $("featurePosterEditList").innerHTML = posterCount ? `<div class="feature-poster-edit-grid">${state.featureDraftPosters.map((poster, index) => {
         const preview = poster.previewUrl || poster.image_url;
-        return `<div class="feature-poster-edit-item"><img src="${esc(preview)}" alt="海报${index + 1}"><button title="移除海报" onclick="removeFeaturePoster(${index})">×</button></div>`;
+        return `<div class="feature-poster-edit-item"><img src="${esc(mediaUrl(preview))}" alt="海报${index + 1}"><button title="移除海报" onclick="removeFeaturePoster(${index})">×</button></div>`;
       }).join("")}</div>` : `<div class="hint" style="margin-top:8px">尚未选择海报。海报会显示在更新事项之前。</div>`;
       $("featureEditList").innerHTML = state.featureDraftItems.map((item, index) => {
         const preview = item.previewUrl || item.image_url;
@@ -1417,7 +1421,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
             ${richEditorMarkup(`featureContent${index}`)}
             <label>图片（限1张）</label>
             <input class="field" type="file" accept="image/*" onchange="selectFeatureItemImage(${index}, this)">
-            ${preview ? `<div class="feature-edit-image-preview"><img src="${esc(preview)}" alt="更新事项${index + 1}图片"><button title="移除图片" onclick="removeFeatureItemImage(${index})">×</button></div>` : `<div class="hint" style="margin-top:6px">尚未选择图片</div>`}
+            ${preview ? `<div class="feature-edit-image-preview"><img src="${esc(mediaUrl(preview))}" alt="更新事项${index + 1}图片"><button title="移除图片" onclick="removeFeatureItemImage(${index})">×</button></div>` : `<div class="hint" style="margin-top:6px">尚未选择图片</div>`}
           </section>`;
       }).join("");
       state.featureDraftItems.forEach((item, index) => setupRichEditor(item.content, `featureContent${index}`, (content) => { item.content = content; }));
@@ -1861,17 +1865,17 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const imageUrls = splitUrls(it.image_url);
       const imageGrid = imageUrls.length ? `<div class="media-grid">${imageUrls.map((url, index) => `
         <div class="media-thumb-wrap">
-          <button class="media-thumb-btn" title="点击放大图片" data-url="${esc(url)}" data-alt="${esc(it.title)} 图片${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
-            <img class="media-thumb" src="${esc(url)}" alt="${esc(it.title)} 图片${index + 1}" onerror="this.parentElement.parentElement.style.display='none'">
+          <button class="media-thumb-btn" title="点击放大图片" data-url="${esc(mediaUrl(url))}" data-alt="${esc(it.title)} 图片${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
+            <img class="media-thumb" src="${esc(mediaUrl(url))}" alt="${esc(it.title)} 图片${index + 1}" onerror="this.parentElement.parentElement.style.display='none'">
             <span class="media-preview-label">点击预览</span>
           </button>
-          <button class="image-download" data-url="${esc(url)}" data-name="${esc(it.title)}-图片${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
+          <button class="image-download" data-url="${esc(mediaUrl(url))}" data-name="${esc(it.title)}-图片${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
         </div>`).join("")}</div>` : "";
       const videoMedia = !it.video_url ? "" : isVideoUrl(it.video_url) ? `
         <div class="video-player-wrap">
-          <video class="video-player" src="${esc(it.video_url)}" controls playsinline preload="metadata"></video>
-          <div class="video-player-actions"><a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">↗ 打开原视频</a></div>
-        </div>` : `<a class="video-link" href="${esc(it.video_url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>`;
+          <video class="video-player" src="${esc(mediaUrl(it.video_url))}" controls playsinline preload="metadata"></video>
+          <div class="video-player-actions"><a class="video-link" href="${esc(mediaUrl(it.video_url))}" target="_blank" rel="noreferrer">↗ 打开原视频</a></div>
+        </div>` : `<a class="video-link" href="${esc(mediaUrl(it.video_url))}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>`;
       const media = imageGrid + videoMedia;
       const updatedAt = it.updated_at || it.created_at;
       const updatedLabel = state.isAdmin
@@ -2189,26 +2193,26 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const url = kind === "image" ? $("editImage")?.value.trim() : $("editVideo")?.value.trim();
       if (kind === "image") {
         const urls = splitUrls(url);
-        const existing = urls.map((u, index) => `<span class="preview-item"><img class="preview-img" src="${esc(u)}" alt="已上传图片${index + 1}" onerror="this.parentElement.style.display='none'"><button class="preview-remove" title="移除这张图片" onclick="removeExistingImage(${index})">×</button></span>`);
-        const pending = state.pendingImageFiles.map((entry, index) => `<span class="preview-item"><img class="preview-img" src="${esc(entry.previewUrl)}" alt="待上传图片${index + 1}"><button class="preview-remove" title="移除这张图片" onclick="removePendingImage(${index})">×</button></span>`);
+        const existing = urls.map((u, index) => `<span class="preview-item"><img class="preview-img" src="${esc(mediaUrl(u))}" alt="已上传图片${index + 1}" onerror="this.parentElement.style.display='none'"><button class="preview-remove" title="移除这张图片" onclick="removeExistingImage(${index})">×</button></span>`);
+        const pending = state.pendingImageFiles.map((entry, index) => `<span class="preview-item"><img class="preview-img" src="${esc(mediaUrl(entry.previewUrl))}" alt="待上传图片${index + 1}"><button class="preview-remove" title="移除这张图片" onclick="removePendingImage(${index})">×</button></span>`);
         $("imagePreview").innerHTML = existing.length || pending.length ? `<div class="image-preview-grid">${[...existing, ...pending].join("")}</div><div class="hint">共 ${existing.length + pending.length}/5 张</div>` : "";
       } else {
         if (state.pendingVideoFile) {
           const entry = state.pendingVideoFile;
           $("videoPreview").innerHTML = `
             <div class="video-upload-preview">
-              <video class="video-player" src="${esc(entry.previewUrl)}" controls playsinline preload="metadata"></video>
+              <video class="video-player" src="${esc(mediaUrl(entry.previewUrl))}" controls playsinline preload="metadata"></video>
               <button class="preview-remove" title="移除这个视频" onclick="removePendingVideo()">×</button>
             </div>
             <div class="file-note">待上传：${esc(entry.file.name)} · ${formatVideoDuration(entry.duration)}</div>`;
         } else if (url && isVideoUrl(url)) {
           $("videoPreview").innerHTML = `
             <div class="video-upload-preview">
-              <video class="video-player" src="${esc(url)}" controls playsinline preload="metadata"></video>
+              <video class="video-player" src="${esc(mediaUrl(url))}" controls playsinline preload="metadata"></video>
               <button class="preview-remove" title="移除这个视频" onclick="removeExistingVideo()">×</button>
             </div>`;
         } else {
-          $("videoPreview").innerHTML = url ? `<a class="video-link" href="${esc(url)}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "";
+          $("videoPreview").innerHTML = url ? `<a class="video-link" href="${esc(mediaUrl(url))}" target="_blank" rel="noreferrer">⬇ 打开视频/网盘链接</a>` : "";
         }
       }
     };
