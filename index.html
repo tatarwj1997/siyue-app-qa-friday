@@ -73,7 +73,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <style>
     :root {
       --gn: #52a882;
@@ -1074,6 +1074,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     };
 
     async function init() {
+      const firstLoad = loadAll();
       if (state.adminPassword) {
         const { data } = await db.rpc("kb_check_admin_password_v2", { p_password: state.adminPassword });
         state.isAdmin = data === true;
@@ -1082,10 +1083,13 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           localStorage.removeItem("kb-admin-password");
         }
       }
-      await loadAll();
+      await firstLoad;
+      renderAdminTools();
+      if (state.isAdmin) render();
       startLiveSync();
     }
 
+    let lastLiveSignature = null;
     async function loadAll() {
       if (loadPromise) return loadPromise;
       const requestRevision = state.dataRevision || 0;
@@ -1102,6 +1106,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           }
           return;
         }
+        const liveSignature = JSON.stringify([itemsRes.data, infoRes.data, metaRes.data]);
+        if (lastLiveSignature === liveSignature) return;
+        lastLiveSignature = liveSignature;
         state.items = (itemsRes.data || []).sort((a, b) => {
           const timeDiff = new Date(b.created_at || 0) - new Date(a.created_at || 0);
           return timeDiff || String(b.id).localeCompare(String(a.id));
