@@ -9,12 +9,36 @@
 window.siyueCloud = {createClient(base, unused, options={}) {
   let pending=null, last=null, expires=0;
   const headers=options.global?.headers||{};
-  const request=async(path,init={})=>{
+
+  const backupBase = "https://siyue-kb-api.siyue-tatarwj1997.workers.dev";
+  const valid = data => data && ["kb_items","kb_basic_info","kb_site_meta"].every(key => Array.isArray(data[key]));
+  const fetchOne = async (endpoint, path, init, timeout) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const response=await fetch(base+path,{...init,headers:{...headers,...init.headers}});
-      const data=await response.json();
-      return response.ok?{data,error:null}:{data:null,error:{message:data.message||'请求失败'}};
-    }catch(error){return {data:null,error:{message:error.message}};}
+      const response = await fetch(endpoint + path, {...init, signal: controller.signal, headers: {...headers,...init.headers}, cache:"no-store"});
+      const data = await response.json();
+      return response.ok ? {data,error:null} : {data:null,error:{message:data.message || "请求失败"}};
+    } catch (error) {
+      return {data:null,error:{message:error.name === "AbortError" ? "连接超时，请稍后重试" : error.message}};
+    } finally { clearTimeout(timer); }
+  };
+  const request = async (path, init = {}) => {
+    // Both endpoints read and write the same Cloudflare D1 database.
+    if (path !== "/data") {
+      // Never retry a write: a timeout may happen after the server saved it.
+      return fetchOne(window.siyueActiveEndpoint || base, path, init, 30000);
+    }
+    const endpoints = [...new Set([window.siyueActiveEndpoint || base, base, backupBase])];
+    let result;
+    for (const endpoint of endpoints) {
+      result = await fetchOne(endpoint, path, init, 4000);
+      if (!result.error && valid(result.data)) {
+        window.siyueActiveEndpoint = endpoint;
+        return result;
+      }
+    }
+    return {data:null,error:result?.error || {message:"暂时无法连接实时内容服务"}};
   };
   const all=()=>{
     if(last&&Date.now()<expires)return Promise.resolve(last);
