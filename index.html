@@ -1254,7 +1254,23 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       $("updateTour").hidden=false;
       $("updateTour").innerHTML=`<strong>更新 ${updateTourIndex+1}/${updateTourItems.length}</strong><button onclick="endUpdateTour()">结束查看</button><button onclick="nextUpdateStep(event)">${last ? "完成" : "下一处"}</button>`;
     }
-    window.nextUpdateStep=event=>{event?.stopPropagation();updateTourIndex++;showTourStep();};
+    window.nextUpdateStep=event=>{
+      event?.stopPropagation();
+      if(updateTourIndex>=updateTourItems.length-1){completeUpdateTour();return;}
+      updateTourIndex++;showTourStep();
+    };
+    function completeUpdateTour() {
+      for(const id of updateTourItems) state.expanded.delete(String(id));
+      if(updateTourActiveId) state.expanded.delete(String(updateTourActiveId));
+      endUpdateTour();updateTourActiveId=null;
+      state.featureOpen=false;state.featureArchiveFocus=null;state.featureFocusIndex=null;
+      state.query="";state.section=null;state.category=null;state.fixStatus=null;
+      $("query").value="";$("clearQuery").hidden=true;
+      render();
+      document.activeElement?.blur();
+      window.scrollTo({top:0,left:0,behavior:"instant"});
+      requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"instant"})));
+    }
     window.endUpdateTour=()=>{updateHighlightCleanup?.();$("updateTour").hidden=true;updateTourItems=[];};
     function maybeShowUpdateNotice() {
       if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
