@@ -603,7 +603,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .feature-split > :last-child {border-left:1px solid var(--yw-dk);}
     .feature-split .feature-title {font-size:18px;}
     .feature-release-copy{min-width:0;}
-    @media(min-width:701px){.archived-release .feature-release-body.has-poster{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.7fr);gap:24px;align-items:start;}.archived-release .feature-poster-section{border-bottom:0;padding-bottom:0;margin-bottom:0;}.archived-release .feature-poster-section .feature-poster-grid{grid-template-columns:1fr;}.archived-release .feature-release-copy .feature-update-section{margin-top:0;}}
+    @media(min-width:701px){.feature-panel .feature-release-body.has-poster{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.7fr);gap:24px;align-items:start;}.feature-panel .feature-poster-section{border-bottom:0;padding-bottom:0;margin-bottom:0;}.feature-panel .feature-poster-section .feature-poster-grid{grid-template-columns:1fr;}.feature-panel .feature-release-copy .feature-update-section{margin-top:0;}}
     .feature-history {margin-bottom:16px;}
     .feature-history > summary {cursor:pointer;padding:12px;font-weight:800;}
     @media(max-width:600px){.feature-split .feature-toggle{gap:5px;padding:12px 8px;flex-wrap:wrap}.feature-split .feature-title{font-size:16px}.feature-split .feature-version-badge{font-size:11px;}}
@@ -1196,34 +1196,34 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       try {const h=JSON.parse(localStorage.getItem("kb-update-navigation-v1") || "null"); if(h && h.seen && typeof h.seen==='object') return state.updateHistory=h;} catch {}
       return state.updateHistory={seen:null,targets:[]};
     }
+    const UPDATE_WINDOW_MS=48*60*60*1000;
+    function recentUpdateItems(now=Date.now()) {
+      return state.items.filter(i=>{
+        const at=Date.parse(i.updated_at || i.created_at || "");
+        return Number.isFinite(at) && at<=now && now-at<=UPDATE_WINDOW_MS;
+      }).sort((a,b)=>Date.parse(b.updated_at || b.created_at)-Date.parse(a.updated_at || a.created_at));
+    }
     function currentUpdateTargets() {
       const h=noticeHistory();
-      if(!h.seen) {
-        const newest=state.items.map(i=>String(i.updated_at || i.created_at || "").slice(0,10)).sort().at(-1);
-        return state.items.filter(i=>String(i.updated_at || i.created_at || "").slice(0,10)===newest);
-      }
-      return state.items.filter(i=>h.seen[String(i.id)]!==contentFingerprint(i));
+      return recentUpdateItems().filter(i=>!h.seen || h.seen[String(i.id)]!==contentFingerprint(i));
     }
     function renderUpdateNavigation(items) {
       const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新 · 版本 "+(parseFeatureData(i).version || "未记录") : i.title;
-      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">点击下方标题，直接定位并展开对应内容。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
+      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">以下为近 48 小时的更新位置，点击标题即可定位并展开。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
     }
     function maybeShowUpdateNotice() {
       if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
       const items=currentUpdateTargets();
-      if(!items.length) return;
       const h=noticeHistory();
       h.seen=Object.fromEntries(state.items.map(i=>[String(i.id),contentFingerprint(i)]));
       h.targets=items.map(i=>String(i.id));
       try {localStorage.setItem("kb-update-navigation-v1",JSON.stringify(h));} catch {}
-      renderUpdateNavigation(items);
+      if(items.length) renderUpdateNavigation(items);
     }
     window.showUpdateLocations = event => {
       event?.stopPropagation();
-      const fresh=currentUpdateTargets();
-      const saved=state.items.filter(i=>(noticeHistory().targets || []).includes(String(i.id)));
-      const targets=fresh.length ? fresh : saved;
-      if(!targets.length){showToast("暂没有新的更新位置");return;}
+      const targets=recentUpdateItems();
+      if(!targets.length){showToast("近 48 小时暂无更新");return;}
       state.featureOpen=false;renderFeature();renderUpdateNavigation(targets);
     };
     window.openUpdateLocation = (id,event) => {
