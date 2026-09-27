@@ -602,13 +602,15 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .feature-split {display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;}
     .feature-split > :last-child {border-left:1px solid var(--yw-dk);}
     .feature-split .feature-title {font-size:18px;}
+    .feature-release-copy{min-width:0;}
+    @media(min-width:701px){.archived-release .feature-release-body.has-poster{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.7fr);gap:24px;align-items:start;}.archived-release .feature-poster-section{border-bottom:0;padding-bottom:0;margin-bottom:0;}.archived-release .feature-poster-section .feature-poster-grid{grid-template-columns:1fr;}.archived-release .feature-release-copy .feature-update-section{margin-top:0;}}
     .feature-history {margin-bottom:16px;}
     .feature-history > summary {cursor:pointer;padding:12px;font-weight:800;}
     @media(max-width:600px){.feature-split .feature-toggle{gap:5px;padding:12px 8px;flex-wrap:wrap}.feature-split .feature-title{font-size:16px}.feature-split .feature-version-badge{font-size:11px;}}
     .feature-module {border:0;background:transparent;box-shadow:none;}
     .feature-split {gap:10px;}
     .feature-split .feature-toggle {min-width:0;min-height:62px;padding:15px 18px;border:1px solid #e3cf9c;border-radius:13px;color:#66502c;box-shadow:0 2px 7px rgba(100,81,37,.035);}
-    .feature-split > :first-child,.feature-module.open .feature-split > :first-child {background:#f3cf55;border-color:#e5bf43;}
+    .feature-split > :first-child,.feature-module.open .feature-split > :first-child {background:#fff1bd;border-color:#ead795;}
     .feature-split > :last-child,.feature-module.open .feature-split > :last-child {background:#715339;border-color:#715339;color:#fff4df;}
     .feature-split .feature-title {font-size:17px;font-weight:750;letter-spacing:.2px;}
     .feature-split .feature-version-badge {border:0;background:rgba(255,255,255,.4);color:#79643c;font-weight:600;font-size:11px;padding:5px 8px;}
@@ -623,16 +625,28 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .internal-update-label{display:inline-block;border-radius:5px;padding:4px 7px;background:#edf3ee;color:#52705e;font-size:11px;font-weight:600;}
     .feature-internal-note{margin:0 0 14px;color:#64756b;font-size:13px;line-height:1.7;}
     .feature-split{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}
-    .feature-split .feature-toggle:first-child{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;}
+    .feature-split .feature-toggle:first-child{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;}
     .feature-split .feature-toggle:first-child .feature-title{grid-column:1;grid-row:1;}
-    .feature-meta{grid-column:1;grid-row:2;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-    .feature-split .feature-toggle:first-child .feature-arrow{grid-column:2;grid-row:1 / 3;}
-    .feature-split .feature-version-badge{font-size:15px;font-weight:750;background:transparent;padding:0;color:#604a23;}
+    .feature-meta{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:nowrap;}
+    .feature-split .feature-toggle:first-child .feature-arrow{grid-column:3;grid-row:1;}
+    .feature-split .feature-version-badge{font-size:19px;font-weight:900;background:rgba(255,255,255,.45);border:1px solid #c6a85b;border-radius:9px;padding:6px 9px;color:#604a23;}.feature-version-label{font-size:11px;font-weight:700;margin-right:5px;}
     .feature-update-date{font-size:12px;font-weight:500;color:#725c2e;white-space:nowrap;}
     .feature-split .feature-toggle:last-child .feature-arrow{color:#ecdcc3;}
-    @media(max-width:600px){.feature-split .feature-title{font-size:14px}.feature-meta{gap:4px 10px}.feature-split .feature-version-badge{font-size:14px}.feature-update-date{font-size:10px}.feature-split .feature-toggle{padding:12px 10px;}}
+    @media(max-width:900px){.feature-split{grid-template-columns:minmax(0,1fr) 140px}.feature-split .feature-toggle:first-child{grid-template-columns:minmax(0,1fr) auto}.feature-split .feature-toggle:first-child .feature-meta{grid-column:1;grid-row:2;justify-content:flex-start;gap:10px;}.feature-split .feature-toggle:first-child .feature-arrow{grid-column:2;grid-row:1 / 3;}}
+    @media(max-width:600px){.feature-split{grid-template-columns:minmax(0,1fr) 76px}.feature-split .feature-title{font-size:13px}.feature-split .feature-version-badge{font-size:16px;padding:5px 6px}.feature-version-label{font-size:10px;margin-right:3px}.feature-split .feature-toggle:first-child .feature-meta{gap:6px;grid-column:1 / 3}.feature-split .feature-toggle:first-child .feature-arrow{grid-row:1}.feature-update-date{font-size:9px}.feature-split .feature-toggle{padding:11px 9px;gap:6px}.feature-split .feature-toggle:first-child{gap:6px}.feature-split .feature-arrow{font-size:16px}.feature-split .feature-toggle:last-child{flex-wrap:nowrap;}.feature-split .feature-toggle:last-child .feature-title{font-size:11px;white-space:nowrap;}}
+    @media(max-width:380px){.feature-split{grid-template-columns:minmax(0,1fr) 64px;gap:6px}.feature-split .feature-toggle{padding:10px 6px}.feature-split .feature-version-badge{font-size:14px;padding:4px}.feature-version-label{font-size:9px}.feature-update-date{font-size:8px}.feature-split .feature-toggle:first-child .feature-meta{gap:4px}}
+    #versionBadge[hidden]{display:none!important;}
     #todayVisits[hidden]{display:none!important;}
-    .update-location-entry{display:flex;justify-content:flex-end;margin:0 0 5px;}
+    .head{align-items:center;}
+    .head > .header-main{display:flex;flex-direction:column;gap:6px;min-width:0;width:auto;}
+    .title-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:0;padding-right:0;}
+    .title-line h1{font-size:22px;line-height:1.25;}
+    .title-line .internal-note{font-size:10px;padding:2px 6px;white-space:nowrap;}
+    .admin-side{position:static;width:232px;flex:0 0 232px;}
+    .support-note{align-self:flex-start;}
+    @media(max-width:700px){.head{position:relative;display:block;padding:8px 0;}.head > .header-main{display:flex;flex-direction:column;gap:6px;width:100%;}.title-line{display:flex;align-content:flex-start;align-items:center;gap:6px;min-height:82px;padding-right:148px;}.title-line h1{font-size:18px;line-height:1.3;text-wrap:wrap;}.title-line .internal-note{font-size:10px;line-height:1.4;white-space:normal;}.support-note{width:fit-content;max-width:100%;margin:0;}.admin-side{position:absolute;top:8px;right:0;width:138px;align-items:flex-end;gap:3px;}.last-updated{font-size:9.5px;}.lock{padding:3px 7px;font-size:10px;}}
+    @media(max-width:360px){.title-line{padding-right:132px;}.title-line h1{font-size:16px;}.title-line .internal-note{font-size:9px;}.admin-side{width:122px;}}
+    .visits-navigation{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:2px 9px;}.updates-nav-link{padding:0;border:0;background:none;color:inherit;font-size:10px;line-height:1.5;text-decoration:underline;text-underline-offset:2px;}
     .update-location-list{display:grid;gap:9px;margin-top:18px;}
     .update-location{display:grid;grid-template-columns:1fr auto;gap:5px 12px;text-align:left;background:#f4f7f1;border:1px solid #dce6d9;border-radius:10px;padding:13px 14px;color:#294e39;}
     .update-location-section{font-size:11px;color:#7e8e7c;grid-column:1;}
@@ -655,16 +669,16 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     <div class="wrap">
       <div class="head">
         <div class="header-main">
-          <div class="version-line"><span id="versionBadge" class="version-badge">版本 <span id="headerVersion" data-header-field="version">读取中</span></span></div>
           <div class="title-line">
             <h1 id="siteTitle" data-header-field="siteTitle">思悦云学习App最新信息查询</h1>
+            <span id="versionBadge" class="version-badge" hidden>版本 <span id="headerVersion" data-header-field="version">读取中</span></span>
+            <span class="internal-note">⚠ 仅内部使用，严禁发给家长</span>
           </div>
-          <div class="internal-note">⚠ 仅内部使用，严禁发给家长</div>
           <div class="support-note">若问题仍无法解决，请将设备信息及<span class="strong">问题详细描述</span>发给Friday。感谢您的理解和支持。</div>
         </div>
         <div class="admin-side">
           <button id="loginBtn" class="lock" title="管理员窗口">管理员窗口</button>
-          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div><div id="todayVisits" class="last-updated" style="font-size:11px" title="从上线统计开始，同一浏览器30分钟内重复打开去重；并非独立人数">今日浏览：读取中</div>
+          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div><div class="visits-navigation"><div id="todayVisits" class="last-updated" style="font-size:11px" title="从上线统计开始，同一浏览器30分钟内重复打开去重；并非独立人数">今日浏览：读取中</div><button class="updates-nav-link" onclick="showUpdateLocations(event)">查看更新位置 ›</button></div>
         </div>
       </div>
       <div id="infoBar" class="info" hidden><div id="infoRow" class="info-row"></div></div>
@@ -680,7 +694,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       <button id="clearQuery" class="clear" hidden>×</button>
     </div>
     <p class="mobile-section-hint">手机端展示空间有限，如需查看智慧教室等专项通知，请在下方点击切换。</p>
-    <div class="update-location-entry"><button class="link-btn" onclick="showUpdateLocations(event)">查看更新位置 ›</button></div>
     <div id="tabs" class="tabs"></div>
     <div id="tags" class="tags"></div>
     <div id="adminTools" class="admin-tools" hidden></div>
@@ -1106,11 +1119,13 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       let posters = [];
       let items = [];
       let otherContent = "";
+      let releaseDate = "";
       if (feature?.content?.startsWith(FEATURE_DATA_PREFIX_V2)) {
         try {
           const parsed = JSON.parse(feature.content.slice(FEATURE_DATA_PREFIX_V2.length));
           version = String(parsed?.version || "");
           otherContent = String(parsed?.other_content || "");
+          releaseDate = String(parsed?.release_date || "");
           posters = Array.isArray(parsed?.posters) ? parsed.posters.map(normalizeFeaturePoster).filter((poster) => poster.image_url) : [];
           items = Array.isArray(parsed?.items) ? parsed.items.map(normalizeFeatureItem) : [];
         } catch {}
@@ -1127,7 +1142,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         })];
       }
       if (includeDefaults && !items.length) items = [emptyFeatureItem()];
-      return { version, posters: posters.slice(0, 3), items, otherContent };
+      return { version, posters: posters.slice(0, 3), items, otherContent, releaseDate };
     };
 
     window.showTodayVisits = value => {
@@ -1190,7 +1205,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       return state.items.filter(i=>h.seen[String(i.id)]!==contentFingerprint(i));
     }
     function renderUpdateNavigation(items) {
-      const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新" : i.title;
+      const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新 · 版本 "+(parseFeatureData(i).version || "未记录") : i.title;
       modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">点击下方标题，直接定位并展开对应内容。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
     }
     function maybeShowUpdateNotice() {
@@ -1311,14 +1326,14 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     function currentFeatureSearchItems() {
       return state.items.filter(f=>[FEATURE_CATEGORY,ARCHIVE_CATEGORY].includes(f.category)).flatMap(feature=>{
         const archived=feature.category===ARCHIVE_CATEGORY;
-        const {posters,items,otherContent}=parseFeatureData(feature);
+        const {posters,items,otherContent,version}=parseFeatureData(feature);
         const searchable = bodyContentText(otherContent).trim() ? [...items,{title:"其他更新 · 仅供内部知晓",content:otherContent}] : items;
         return searchable.map((item,index)=>({
           id:`feature-search-${feature.id}-${index}`,section:"学生端",category:archived?"往期更新":"本次上新",
           title:item.title || (archived?"往期更新内容":"本次更新内容"),content:[item.subtitle,bodyContentText(item.content)].filter(Boolean).join("\n"),
           image_url:[...posters.map(p=>p.image_url),item.image_url,...(item.extra_images || [])].filter(Boolean).join("\n"),
-          keywords:[item.title,item.subtitle,bodyContentText(item.content)].join(" "),created_at:feature.created_at,updated_at:feature.updated_at,
-          _featureSearchResult:true,_featureIndex:index,_featureVersion:archived?"":sharedVersion(),_archiveId:archived?feature.id:null
+          keywords:[version,item.title,item.subtitle,bodyContentText(item.content)].join(" "),created_at:feature.created_at,updated_at:feature.updated_at,
+          _featureSearchResult:true,_featureIndex:index,_featureVersion:archived?version:sharedVersion(),_archiveId:archived?feature.id:null
         }));
       });
     }
@@ -1375,17 +1390,19 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     }
 
     function featureDetail(feature, archived = false) {
-      const {posters, items, otherContent} = parseFeatureData(feature);
+      const {posters, items, otherContent, version} = parseFeatureData(feature);
+      const displayVersion=archived ? version : sharedVersion();
       const merged = mergedFeatureItem(items);
       const picture = (url, label) => `<div class="feature-poster-wrap"><button class="feature-poster-button" data-url="${esc(mediaUrl(url))}" data-alt="${esc(label)}" onclick="openImagePreview(this.dataset.url,this.dataset.alt)"><img class="feature-poster" src="${esc(mediaUrl(url))}" alt="${esc(label)}" loading="lazy" decoding="async"></button><button class="image-download" data-url="${esc(mediaUrl(url))}" data-name="${esc(label)}" onclick="downloadOriginalImage(event,this.dataset.url,this.dataset.name)">下载原图</button></div>`;
       const idArg = feature ? esc(JSON.stringify(String(feature.id))) : "null";
-      return `<article class="feature-panel student">
-        <h2 class="feature-panel-title">${archived ? "往期更新内容" : "思悦云学习 App 最新更新内容"}${!archived && sharedVersion() ? `<span>版本 ${esc(sharedVersion())}</span>` : ""}</h2>
+      return `<article class="feature-panel student${archived ? " archived-release" : ""}">
+        <h2 class="feature-panel-title">${archived ? "往期更新内容" : "思悦云学习 App 最新更新内容"}${displayVersion ? `<span>版本 ${esc(displayVersion)}</span>` : archived ? `<span>版本未记录</span>` : ""}</h2>
         ${state.isAdmin ? `<div class="feature-actions" style="margin:0 0 18px"><button class="primary" onclick="openFeatureEditor(false,${archived ? idArg : 'null'})">编辑</button>${!archived ? `<button class="primary gray" onclick="requestArchiveFeatureItems()" ${!feature ? 'disabled' : ''}>一键转</button>` : ""}</div>` : ""}
+        <div class="feature-release-body${posters.length ? " has-poster" : ""}">
         ${posters.length ? `<section class="feature-poster-section"><div class="feature-section-heading"><span>功能海报</span><small>${posters.length} 张</small></div><div class="feature-poster-grid">${posters.map((p,i)=>picture(p.image_url,`功能海报 ${i+1}`)).join("")}</div></section>` : ""}
-        <section class="feature-update-section"><div class="feature-section-heading"><span>外宣更新内容</span></div>
+        <div class="feature-release-copy"><section class="feature-update-section"><div class="feature-section-heading"><span>外宣更新内容</span></div>
           ${items.length ? `<article id="feature-update-0" class="feature-update-card">${merged.title ? `<h3 class="feature-update-title">${esc(merged.title)}</h3>` : ""}${merged.subtitle ? `<div class="feature-update-subtitle">${linkifyText(merged.subtitle)}</div>` : ""}<div class="feature-update-content">${renderBodyContent(merged.content)}</div>${[merged.image_url,...(merged.extra_images || [])].filter(Boolean).length ? `<div class="feature-poster-grid">${[merged.image_url,...(merged.extra_images || [])].filter(Boolean).map((u,i)=>picture(u,`更新图片 ${i+1}`)).join("")}</div>` : ""}</article>` : `<div class="feature-copy">暂无本次上新内容。</div>`}
-        </section>${bodyContentText(otherContent).trim() ? `<section class="feature-other-section"><div class="feature-section-heading"><span>其他更新</span><small class="internal-update-label">仅供内部知晓</small></div><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p><div class="feature-update-content">${renderBodyContent(otherContent)}</div></section>` : ""}</article>`;
+        </section>${bodyContentText(otherContent).trim() ? `<section class="feature-other-section"><div class="feature-section-heading"><span>其他更新</span><small class="internal-update-label">仅供内部知晓</small></div><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p><div class="feature-update-content">${renderBodyContent(otherContent)}</div></section>` : ""}</div></div></article>`;
     }
 
     function renderFeature() {
@@ -1401,9 +1418,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const unseen = hasUnseenFeature(current);
       const archives = state.items.filter(i=>i.category === ARCHIVE_CATEGORY).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
       $("featureModule").innerHTML = `<div class="feature-split">
-        <div class="feature-toggle"><button id="featureToggle" class="feature-hit-target" aria-expanded="${open && state.featureTab==='current'}" aria-label="思悦云学习 App 最新更新内容"></button><span class="feature-title">思悦云学习 App 最新更新内容${unseen ? `<small class="update-dot">有新更新</small>` : ""}</span>${sharedVersion() || state.isAdmin ? `<span class="feature-meta"><span class="feature-version-badge">版本 <span id="featureHeaderVersion" data-header-field="version">${esc(sharedVersion())}</span></span><span class="feature-update-date">更新日期 ${esc(current?.updated_at ? new Date(current.updated_at).toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}) : "—")}</span></span>` : ""}<span class="feature-arrow">⌄</span></div>
+        <div class="feature-toggle"><button id="featureToggle" class="feature-hit-target" aria-expanded="${open && state.featureTab==='current'}" aria-label="思悦云学习 App 最新更新内容"></button><span class="feature-title">思悦云学习 App 最新更新内容${unseen ? `<small class="update-dot">有新更新</small>` : ""}</span>${sharedVersion() || state.isAdmin ? `<span class="feature-meta"><span class="feature-version-badge"><span class="feature-version-label">最新版本号</span><span id="featureHeaderVersion" data-header-field="version">${esc(sharedVersion())}</span></span><span class="feature-update-date">更新日期 ${esc(current?.updated_at ? new Date(current.updated_at).toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}) : "—")}</span></span>` : ""}<span class="feature-arrow">⌄</span></div>
         <div class="feature-toggle"><button id="featureArchiveToggle" class="feature-hit-target" aria-expanded="${open && state.featureTab==='archive'}" aria-label="往期更新"></button><span class="feature-title">往期更新</span><span class="feature-arrow">⌄</span></div>
-        </div>${open ? `<div class="feature-detail">${state.featureTab==='current' ? featureDetail(current) : archives.length ? archives.map(a=>`<details class="feature-history" ${String(state.featureArchiveFocus)===String(a.id) ? 'open' : ''}><summary>${esc((a.updated_at || a.created_at || '').slice(0,10))} · 往期更新</summary>${featureDetail(a,true)}</details>`).join("") : '<div class="feature-copy">暂无往期更新内容。</div>'}</div>` : ""}`;
+        </div>${open ? `<div class="feature-detail">${state.featureTab==='current' ? featureDetail(current) : archives.length ? archives.map(a=>`<details class="feature-history" ${String(state.featureArchiveFocus)===String(a.id) ? 'open' : ''}><summary>版本 ${esc(parseFeatureData(a).version || "未记录")} · ${esc((parseFeatureData(a).releaseDate || a.updated_at || a.created_at || '').slice(0,10))}</summary>${featureDetail(a,true)}</details>`).join("") : '<div class="feature-copy">暂无往期更新内容。</div>'}</div>` : ""}`;
       syncHeaderFields();
       for (const [id,tab] of [["featureToggle","current"],["featureArchiveToggle","archive"]]) $(id).onclick = event => {
         event.stopPropagation(); state.featureOpen = !(state.featureOpen && state.featureTab===tab);state.featureTab=tab;if(tab==="current" && state.featureOpen) markFeatureSeen();state.featureFocusIndex=null;renderFeature();
@@ -1425,18 +1442,20 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
       if (!feature) return showToast("当前没有可转入的上新内容");
       state.featureOpen=false;renderFeature();
-      modal(`<div class="modal-title">转入往期更新</div><div class="hint">本次上新的全部正文、排版和图片将整体移入“往期更新”，不再生成学生端情况说明。转入后本次上新位置留空，往期不显示版本号。</div><div id="archiveFeatureError" class="error"></div><button class="primary" style="margin-top:18px" onclick="archiveFeatureItems(event)">确认转入往期更新</button>`,true);
+      modal(`<div class="modal-title">转入往期更新</div><div class="hint">本次上新的全部正文、排版和图片将整体移入“往期更新”，不再生成学生端情况说明。转入后本次上新位置留空；往期记录会保留当前版本号及对应的全部内容。</div><div id="archiveFeatureError" class="error"></div><button class="primary" style="margin-top:18px" onclick="archiveFeatureItems(event)">确认转入往期更新</button>`,true);
     };
     window.archiveFeatureItems = async event => {
       if (!state.isAdmin || state.featureSaving) return;
       const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
       if (!feature) return;
+      const archivedData=parseFeatureData(feature);
+      const archivedContent=FEATURE_DATA_PREFIX_V2+JSON.stringify({version:sharedVersion() || archivedData.version,posters:archivedData.posters.map(p=>p.image_url),items:archivedData.items,other_content:archivedData.otherContent,release_date:archivedData.releaseDate || feature.updated_at || feature.created_at});
       state.featureSaving=true;
       const release=lockModalForSave();
       try {
         const result=await db.rpc("kb_admin_save_item_v2",{
           p_password:state.adminPassword,p_id:feature.id,p_section:"学生端",p_category:ARCHIVE_CATEGORY,
-          p_title:"往期更新内容",p_content:feature.content,p_image_url:feature.image_url || "",p_video_url:feature.video_url || "",
+          p_title:"往期更新内容",p_content:archivedContent,p_image_url:feature.image_url || "",p_video_url:feature.video_url || "",
           p_fix_status:feature.fix_status || "",p_fix_note:feature.fix_note || "",p_keywords:feature.keywords || ""
         });
         if (result.error) throw result.error;
@@ -1470,6 +1489,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       state.featureDraftPosters = draft.posters;
       state.featureDraftItems = [mergedFeatureItem(draft.items)];
       state.featureDraftOther = draft.otherContent || "";
+      state.featureDraftReleaseDate = draft.releaseDate || (archiveId ? it.updated_at || it.created_at : "");
       modal(`
         <div class="modal-title">${archiveId ? "编辑往期更新" : "编辑本次上新"}</div>
         <div class="hint">分为“外宣更新内容”和“其他更新”，均支持富文本排版。“其他更新”留空时不会展示。</div>
@@ -1638,7 +1658,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
             extra_images: item.extra_images || []
           });
         }
-        const encodedContent = FEATURE_DATA_PREFIX_V2 + JSON.stringify({ version: savedVersion, posters: savedPosterUrls, items: savedItems, other_content: bodyContentText(state.featureDraftOther).trim() ? normalizeBodyContent(state.featureDraftOther) : "" });
+        const encodedContent = FEATURE_DATA_PREFIX_V2 + JSON.stringify({ version: savedVersion, posters: savedPosterUrls, items: savedItems, other_content: bodyContentText(state.featureDraftOther).trim() ? normalizeBodyContent(state.featureDraftOther) : "", release_date: state.featureArchiveId ? state.featureDraftReleaseDate : "" });
         const res = await db.rpc("kb_admin_save_item_v2", {
           p_password: state.adminPassword,
           p_id: state.featureSavedId || id || null,
