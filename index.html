@@ -632,6 +632,13 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .feature-split .feature-toggle:last-child .feature-arrow{color:#ecdcc3;}
     @media(max-width:600px){.feature-split .feature-title{font-size:14px}.feature-meta{gap:4px 10px}.feature-split .feature-version-badge{font-size:14px}.feature-update-date{font-size:10px}.feature-split .feature-toggle{padding:12px 10px;}}
     #todayVisits[hidden]{display:none!important;}
+    .update-location-entry{display:flex;justify-content:flex-end;margin:0 0 5px;}
+    .update-location-list{display:grid;gap:9px;margin-top:18px;}
+    .update-location{display:grid;grid-template-columns:1fr auto;gap:5px 12px;text-align:left;background:#f4f7f1;border:1px solid #dce6d9;border-radius:10px;padding:13px 14px;color:#294e39;}
+    .update-location-section{font-size:11px;color:#7e8e7c;grid-column:1;}
+    .update-location-title{font-size:14px;line-height:1.6;font-weight:650;grid-column:1;}
+    .update-location-arrow{grid-column:2;grid-row:1/3;align-self:center;white-space:nowrap;font-size:12px;color:#70845c;}
+    .update-location-target{scroll-margin-top:18px;outline:2px solid #c9a227;outline-offset:3px;}
     .update-notice-kicker{color:#7b673a;font-size:12px;margin:3px 0 10px;letter-spacing:.5px;}
     .update-notice-meta{color:#7c897e;font-size:12px;margin:0 0 20px;}
     .update-notice-heading{font-size:14px;color:#315844;margin:18px 0 8px;}
@@ -673,6 +680,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       <button id="clearQuery" class="clear" hidden>×</button>
     </div>
     <p class="mobile-section-hint">手机端展示空间有限，如需查看智慧教室等专项通知，请在下方点击切换。</p>
+    <div class="update-location-entry"><button class="link-btn" onclick="showUpdateLocations(event)">查看更新位置 ›</button></div>
     <div id="tabs" class="tabs"></div>
     <div id="tags" class="tags"></div>
     <div id="adminTools" class="admin-tools" hidden></div>
@@ -1146,27 +1154,78 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
       if(feature) try {localStorage.setItem("kb-seen-update",feature.id+":"+feature.updated_at);} catch {}
     }
-    function updateRevision(feature) {return feature.id+":"+feature.updated_at;}
-    function maybeShowUpdateNotice() {
-      if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show")) return;
-      const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
-      if (!feature) return;
-      const key=updateRevision(feature);
-      let remembered="";
-      try {remembered=localStorage.getItem("kb-update-notice") || "";} catch {}
-      if(remembered===key || state.lastNoticeRevision===key) return;
-      const data=parseFeatureData(feature);
-      const combined=mergedFeatureItem(data.items);
-      const summary=[combined.title,combined.subtitle,bodyContentText(combined.content)].filter(Boolean).join(" · ");
-      const other=bodyContentText(data.otherContent).trim();
-      state.lastNoticeRevision=key;
-      try {localStorage.setItem("kb-update-notice",key);} catch {}
-      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">有新的更新</div><div class="update-notice-meta">${esc(data.version || sharedVersion())} · ${esc(new Date(feature.updated_at).toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai"}))}</div>${summary ? `<h3 class="update-notice-heading">外宣更新内容</h3><p class="update-notice-summary">${esc(summary.slice(0,190))}${summary.length>190?"…":""}</p>` : ""}${other ? `<h3 class="update-notice-heading">其他更新 <small class="internal-update-label">仅供内部知晓</small></h3><p class="update-notice-summary">${esc(other.slice(0,100))}${other.length>100?"…":""}</p><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p>` : ""}<div class="update-notice-actions"><button class="primary" onclick="openLatestUpdateNotice(event)">查看本次更新</button><button class="primary gray" onclick="closeModal()">稍后查看</button></div>`,true,"update-notice-modal");
+    // Ignore presentation-only edits, but retain digits and meaningful math signs.
+    function meaningfulText(value) {
+      return String(value || "").normalize("NFKC").replace(/[\p{P}\s]/gu,(char,offset,text)=> {
+        if (/[.%+\-/:]/.test(char) && /\d/.test(text[offset-1] || "") && /\d/.test(text[offset+1] || "")) return char;
+        if (/[+%\-]/.test(char) && (/\d/.test(text[offset+1] || "") || /\d/.test(text[offset-1] || ""))) return char;
+        return "";
+      });
     }
-    window.openLatestUpdateNotice = (event) => {
+    function meaningfulBody(value) {
+      const html=decodeRichContent(value);
+      const links=html ? Array.from(new DOMParser().parseFromString(html,"text/html").querySelectorAll("a[href]")).map(a=>a.getAttribute("href")) : (String(value || "").match(/https?:\/\/[^\s<>]+/g) || []);
+      return [meaningfulText(bodyContentText(value)),links];
+    }
+    function contentFingerprint(item) {
+      const media=value=>splitUrls(value).map(mediaUrl);
+      if ([FEATURE_CATEGORY,ARCHIVE_CATEGORY].includes(item.category)) {
+        const d=parseFeatureData(item);
+        return JSON.stringify([item.category,meaningfulText(d.version),d.posters.map(p=>mediaUrl(p.image_url)),
+          d.items.map(i=>[meaningfulText(i.title),meaningfulText(i.subtitle),meaningfulBody(i.content),media(i.image_url), (i.extra_images || []).map(mediaUrl)]), meaningfulBody(d.otherContent)]);
+      }
+      return JSON.stringify([item.section,item.category,meaningfulText(item.title),meaningfulBody(item.content),meaningfulText(item.fix_note),item.fix_status || "",media(item.image_url),media(item.video_url)]);
+    }
+    function noticeHistory() {
+      if(state.updateHistory) return state.updateHistory;
+      try {const h=JSON.parse(localStorage.getItem("kb-update-navigation-v1") || "null"); if(h && h.seen && typeof h.seen==='object') return state.updateHistory=h;} catch {}
+      return state.updateHistory={seen:null,targets:[]};
+    }
+    function currentUpdateTargets() {
+      const h=noticeHistory();
+      if(!h.seen) {
+        const newest=state.items.map(i=>String(i.updated_at || i.created_at || "").slice(0,10)).sort().at(-1);
+        return state.items.filter(i=>String(i.updated_at || i.created_at || "").slice(0,10)===newest);
+      }
+      return state.items.filter(i=>h.seen[String(i.id)]!==contentFingerprint(i));
+    }
+    function renderUpdateNavigation(items) {
+      const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新" : i.title;
+      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">点击下方标题，直接定位并展开对应内容。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
+    }
+    function maybeShowUpdateNotice() {
+      if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
+      const items=currentUpdateTargets();
+      if(!items.length) return;
+      const h=noticeHistory();
+      h.seen=Object.fromEntries(state.items.map(i=>[String(i.id),contentFingerprint(i)]));
+      h.targets=items.map(i=>String(i.id));
+      try {localStorage.setItem("kb-update-navigation-v1",JSON.stringify(h));} catch {}
+      renderUpdateNavigation(items);
+    }
+    window.showUpdateLocations = event => {
       event?.stopPropagation();
-      closeModal();state.featureTab="current";state.featureOpen=true;markFeatureSeen();renderFeature();
-      $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});
+      const fresh=currentUpdateTargets();
+      const saved=state.items.filter(i=>(noticeHistory().targets || []).includes(String(i.id)));
+      const targets=fresh.length ? fresh : saved;
+      if(!targets.length){showToast("暂没有新的更新位置");return;}
+      state.featureOpen=false;renderFeature();renderUpdateNavigation(targets);
+    };
+    window.openUpdateLocation = (id,event) => {
+      event?.stopPropagation();
+      const item=state.items.find(i=>String(i.id)===String(id));
+      if(!item){showToast("这条内容已调整，请刷新后查看");return;}
+      closeModal();
+      if([FEATURE_CATEGORY,ARCHIVE_CATEGORY].includes(item.category)) {
+        state.featureTab=item.category===ARCHIVE_CATEGORY?"archive":"current";
+        state.featureArchiveFocus=item.id;state.featureOpen=true;
+        if(state.featureTab==='current') markFeatureSeen();renderFeature();
+        $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});return;
+      }
+      state.featureOpen=false;state.query="";state.section=item.section;state.category=null;state.fixStatus=null;
+      $("query").value="";$("clearQuery").hidden=true;state.expanded.add(String(item.id));render();
+      const card=document.getElementById("kb-item-"+item.id);
+      if(card){card.classList.add("update-location-target");card.scrollIntoView({behavior:"smooth",block:"start"});card.querySelector(".card-head")?.focus({preventScroll:true});}
     };
 
     async function init() {
@@ -1874,7 +1933,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           <button class="link-btn danger" onclick="requestDeleteItem('${it.id}')">删除</button>
         </div>` : "";
       return `
-        <article class="card${pinned ? " pinned" : ""}">
+        <article id="kb-item-${esc(String(it.id))}" class="card${pinned ? " pinned" : ""}">
           ${adminActions}
           <button class="card-head" onclick="toggleItem('${it.id}')" aria-expanded="${open}">
             <span class="dot" style="background:${colorForCategory(category)};margin-top:7px"></span>
