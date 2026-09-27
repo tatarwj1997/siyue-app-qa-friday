@@ -647,6 +647,25 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     @media(max-width:700px){.head{position:relative;display:block;padding:8px 0;}.head > .header-main{display:flex;flex-direction:column;gap:6px;width:100%;}.title-line{display:flex;align-content:flex-start;align-items:center;gap:6px;min-height:82px;padding-right:148px;}.title-line h1{font-size:18px;line-height:1.3;text-wrap:wrap;}.title-line .internal-note{font-size:10px;line-height:1.4;white-space:normal;}.support-note{width:fit-content;max-width:100%;margin:0;}.admin-side{position:absolute;top:8px;right:0;width:138px;align-items:flex-end;gap:3px;}.last-updated{font-size:9.5px;}.lock{padding:3px 7px;font-size:10px;}}
     @media(max-width:360px){.title-line{padding-right:132px;}.title-line h1{font-size:16px;}.title-line .internal-note{font-size:9px;}.admin-side{width:122px;}}
     .visits-navigation{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:2px 9px;}.updates-nav-link{padding:0;border:0;background:none;color:inherit;font-size:10px;line-height:1.5;text-decoration:underline;text-underline-offset:2px;}
+    .update-notice-modal > .close{display:block;top:9px;right:9px;padding:3px 7px;font-size:16px;}
+    .modal.narrow.update-notice-modal{width:min(310px,calc(100vw - 32px));padding:19px 17px 16px;border-radius:14px;box-sizing:border-box;}
+    .notice-heading{display:flex;align-items:center;gap:4px;}
+    .notice-heading svg{width:42px;height:30px;flex:none;margin-right:4px;}
+    .notice-heading .modal-title{font-size:16px;line-height:1.4;margin:0;}
+    .notice-description{font-size:13px;line-height:1.6;margin:9px 0 15px;color:#607267;}
+    .notice-actions{display:flex;gap:8px;}
+    .notice-actions .primary{min-height:36px;padding:8px 10px;font-size:12px;line-height:1.4;border-radius:8px;white-space:nowrap;}
+    .notice-actions .gray{flex:0 0 64px;background:#eef2ee;color:#52645a;box-shadow:none;}
+    .notice-actions .primary:last-child{flex:1;}
+
+    @keyframes update-border-pulse{0%,100%{outline-color:rgba(197,154,43,.18);box-shadow:0 0 0 1px rgba(197,154,43,.03)}50%{outline-color:#ae7906;box-shadow:0 0 0 5px rgba(213,161,32,.34),0 0 22px rgba(213,161,32,.28)}}
+    .update-attention{outline:2px solid #c59a2b;outline-offset:3px;animation:update-border-pulse 2.8s ease-in-out infinite;}
+    @media(prefers-reduced-motion:reduce){.update-attention{animation:none;outline-color:#c59a2b;}}
+    .search-tools{display:flex;gap:10px;align-items:stretch;margin-bottom:10px;}.search-tools .search{flex:1;min-width:0;margin:0;}.updates-entry{flex:0 0 auto;border:1px solid #dbc889;background:#fff2c5;color:#655023;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;}.search-tools input{min-width:0;}
+    .update-tour{position:fixed;z-index:45;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid #d9dfd4;border-radius:12px;background:#fffef7;box-shadow:0 4px 20px #24433126;font-size:12px;white-space:nowrap;}.update-tour[hidden]{display:none;}.update-tour button{border:0;border-radius:7px;padding:7px 10px;font-size:12px;background:#eaf0ea;color:#34563f;cursor:pointer;}.update-tour button:last-child{background:#2e7050;color:white;}
+    @keyframes bulb-rays{0%,100%{opacity:.4}50%{opacity:1}}.notice-heading svg{animation:bulb-rays 2.8s ease-in-out infinite;}
+    @media(max-width:600px){.search-tools{gap:7px}.updates-entry{flex-basis:102px;padding:8px;font-size:11px;line-height:1.5}.search-tools .search{padding:9px 10px}.search-tools .search input{font-size:13px}.update-tour{gap:8px;max-width:calc(100vw - 24px);padding:8px}}
+    @media(prefers-reduced-motion:reduce){.notice-heading svg{animation:none}}
     .update-location-list{display:grid;gap:9px;margin-top:18px;}
     .update-location{display:grid;grid-template-columns:1fr auto;gap:5px 12px;text-align:left;background:#f4f7f1;border:1px solid #dce6d9;border-radius:10px;padding:13px 14px;color:#294e39;}
     .update-location-section{font-size:11px;color:#7e8e7c;grid-column:1;}
@@ -678,7 +697,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         </div>
         <div class="admin-side">
           <button id="loginBtn" class="lock" title="管理员窗口">管理员窗口</button>
-          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div><div class="visits-navigation"><div id="todayVisits" class="last-updated" style="font-size:11px" title="从上线统计开始，同一浏览器30分钟内重复打开去重；并非独立人数">今日浏览：读取中</div><button class="updates-nav-link" onclick="showUpdateLocations(event)">查看更新位置 ›</button></div>
+          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div><div class="visits-navigation"><div id="todayVisits" class="last-updated" style="font-size:11px" title="从上线统计开始，同一浏览器30分钟内重复打开去重；并非独立人数">今日浏览：读取中</div></div>
         </div>
       </div>
       <div id="infoBar" class="info" hidden><div id="infoRow" class="info-row"></div></div>
@@ -688,10 +707,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
   <main class="wrap">
     <div id="featureBackdrop" class="feature-backdrop" aria-hidden="true"></div>
     <section id="featureModule" class="feature-module" aria-label="App 最新功能"></section>
-    <div class="search">
+    <div class="search-tools"><button class="updates-entry" onclick="showUpdateLocations(event)">查看最新更新位置 <span aria-hidden="true">›</span></button><div class="search">
       <span>🔎</span>
       <input id="query" placeholder="请输入问题相关关键词，比如朗读、积分、希沃、学习机">
       <button id="clearQuery" class="clear" hidden>×</button>
+    </div>
     </div>
     <p class="mobile-section-hint">手机端展示空间有限，如需查看智慧教室等专项通知，请在下方点击切换。</p>
     <div id="tabs" class="tabs"></div>
@@ -700,6 +720,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     <div id="list" class="list"><div class="loading">正在打开知识库…</div></div>
   </main>
 
+  <div id="updateTour" class="update-tour" hidden aria-live="polite"></div>
   <div id="modalLayer" class="overlay"></div>
   <div id="imageLightbox" class="image-lightbox" onclick="if(event.target===this) closeImagePreview()">
     <button id="lightboxDownload" class="lightbox-download" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">⬇ 下载原图</button>
@@ -1208,9 +1229,28 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       return recentUpdateItems().filter(i=>!h.seen || h.seen[String(i.id)]!==contentFingerprint(i));
     }
     function renderUpdateNavigation(items) {
-      const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新 · 版本 "+(parseFeatureData(i).version || "未记录") : i.title;
-      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">以下为近 48 小时的更新位置，点击标题即可定位并展开。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
+      state.updateJumpIds=items.map(i=>String(i.id));
+      if(!items.length) return;
+      const bulb=`<svg viewBox="0 0 56 40" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="#fff1ba"/><path d="M12 24c0-3-4-5-4-10a10 10 0 0 1 20 0c0 5-4 7-4 10Z" fill="#f9d86d" stroke="#ad8225" stroke-width="1.4"/><path d="M13 28h10m-8 4h6m-3-9v-7m-4-2 4 3 4-3M18 0v2M1 9l3 2M32 8l3-2" stroke="#ad8225" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="39" cy="20" r="1.5" fill="#6b8575"/><circle cx="45" cy="20" r="1.5" fill="#6b8575"/><circle cx="51" cy="20" r="1.5" fill="#6b8575"/></svg>`;
+      modal(`<div class="notice-heading">${bulb}<div class="modal-title">网站有新内容更新</div></div><p class="notice-description">${items.length>1 ? `共 ${items.length} 处更新，可依次定位查看。` : "点击即可定位并展开更新内容。"}</p><div class="notice-actions"><button id="quickUpdateJump" class="primary" style="width:100%">快速跳转到更新位置${items.length>1 ? `（${items.length} 处）` : ""}</button></div>`,true,"update-notice-modal");
+      document.querySelector(".update-notice-modal > .close").setAttribute("aria-label","关闭");
+      $("quickUpdateJump").onclick=()=>startUpdateTour(items);
     }
+    let updateTourItems=[],updateTourIndex=0;
+    function startUpdateTour(items) {
+      updateTourItems=items.map(i=>String(i.id));updateTourIndex=0;
+      showTourStep();
+    }
+    function showTourStep() {
+      updateTourItems=updateTourItems.filter(id=>state.items.some(i=>String(i.id)===id));
+      if(updateTourIndex>=updateTourItems.length){endUpdateTour();return;}
+      openUpdateLocation(updateTourItems[updateTourIndex]);
+      const last=updateTourIndex===updateTourItems.length-1;
+      $("updateTour").hidden=false;
+      $("updateTour").innerHTML=`<strong>更新 ${updateTourIndex+1}/${updateTourItems.length}</strong><button onclick="endUpdateTour()">结束查看</button><button onclick="nextUpdateStep()">${last ? "完成" : "下一处"}</button>`;
+    }
+    window.nextUpdateStep=()=>{updateTourIndex++;showTourStep();};
+    window.endUpdateTour=()=>{updateHighlightCleanup?.();$("updateTour").hidden=true;updateTourItems=[];};
     function maybeShowUpdateNotice() {
       if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
       const items=currentUpdateTargets();
@@ -1222,10 +1262,20 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     }
     window.showUpdateLocations = event => {
       event?.stopPropagation();
+      endUpdateTour();
       const targets=recentUpdateItems();
       if(!targets.length){showToast("近 48 小时暂无更新");return;}
       state.featureOpen=false;renderFeature();renderUpdateNavigation(targets);
     };
+    let updateHighlightCleanup=null;
+    function highlightUpdateLocations(nodes) {
+      updateHighlightCleanup?.();
+      nodes.forEach(node=>node.classList.add("update-attention"));
+      const stop=()=>{document.querySelectorAll(".update-attention").forEach(node=>node.classList.remove("update-attention"));document.removeEventListener("pointerdown",stop,true);document.removeEventListener("keydown",stop,true);updateHighlightCleanup=null;};
+      updateHighlightCleanup=stop;
+      document.addEventListener("pointerdown",stop,true);
+      document.addEventListener("keydown",stop,true);
+    }
     window.openUpdateLocation = (id,event) => {
       event?.stopPropagation();
       const item=state.items.find(i=>String(i.id)===String(id));
@@ -1235,12 +1285,13 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         state.featureTab=item.category===ARCHIVE_CATEGORY?"archive":"current";
         state.featureArchiveFocus=item.id;state.featureOpen=true;
         if(state.featureTab==='current') markFeatureSeen();renderFeature();
-        $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});return;
+        $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});highlightUpdateLocations(Array.from($("featureModule").querySelectorAll(".feature-panel")));return;
       }
-      state.featureOpen=false;state.query="";state.section=item.section;state.category=null;state.fixStatus=null;
+      state.featureOpen=false;state.query="";state.section=(state.updateJumpIds || []).length>1 ? null : item.section;state.category=null;state.fixStatus=null;
+      for(const updatedId of state.updateJumpIds || [String(item.id)]) state.expanded.add(String(updatedId));
       $("query").value="";$("clearQuery").hidden=true;state.expanded.add(String(item.id));render();
       const card=document.getElementById("kb-item-"+item.id);
-      if(card){card.classList.add("update-location-target");card.scrollIntoView({behavior:"smooth",block:"start"});card.querySelector(".card-head")?.focus({preventScroll:true});}
+      if(card){highlightUpdateLocations([card]);card.scrollIntoView({behavior:"smooth",block:"start"});card.querySelector(".card-head")?.focus({preventScroll:true});}
     };
 
     async function init() {
