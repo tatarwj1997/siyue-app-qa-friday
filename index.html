@@ -1234,22 +1234,26 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const bulb=`<svg viewBox="0 0 56 40" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="#fff1ba"/><path d="M12 24c0-3-4-5-4-10a10 10 0 0 1 20 0c0 5-4 7-4 10Z" fill="#f9d86d" stroke="#ad8225" stroke-width="1.4"/><path d="M13 28h10m-8 4h6m-3-9v-7m-4-2 4 3 4-3M18 0v2M1 9l3 2M32 8l3-2" stroke="#ad8225" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="39" cy="20" r="1.5" fill="#6b8575"/><circle cx="45" cy="20" r="1.5" fill="#6b8575"/><circle cx="51" cy="20" r="1.5" fill="#6b8575"/></svg>`;
       modal(`<div class="notice-heading">${bulb}<div class="modal-title">网站有新内容更新</div></div><p class="notice-description">${items.length>1 ? `共 ${items.length} 处更新，可依次定位查看。` : "点击即可定位并展开更新内容。"}</p><div class="notice-actions"><button id="quickUpdateJump" class="primary" style="width:100%">快速跳转到更新位置${items.length>1 ? `（${items.length} 处）` : ""}</button></div>`,true,"update-notice-modal");
       document.querySelector(".update-notice-modal > .close").setAttribute("aria-label","关闭");
-      $("quickUpdateJump").onclick=()=>startUpdateTour(items);
+      $("quickUpdateJump").onclick=event=>{event.stopPropagation();startUpdateTour(items);};
     }
-    let updateTourItems=[],updateTourIndex=0;
+    let updateTourItems=[],updateTourIndex=0,updateTourActiveId=null;
     function startUpdateTour(items) {
-      updateTourItems=items.map(i=>String(i.id));updateTourIndex=0;
+      updateTourItems=items.map(i=>String(i.id));updateTourIndex=0;updateTourActiveId=null;
+      for(const id of updateTourItems) state.expanded.delete(id);
       showTourStep();
     }
     function showTourStep() {
       updateTourItems=updateTourItems.filter(id=>state.items.some(i=>String(i.id)===id));
       if(updateTourIndex>=updateTourItems.length){endUpdateTour();return;}
-      openUpdateLocation(updateTourItems[updateTourIndex]);
+      if(updateTourActiveId) state.expanded.delete(updateTourActiveId);
+      state.featureOpen=false;state.featureArchiveFocus=null;
+      updateTourActiveId=updateTourItems[updateTourIndex];
+      openUpdateLocation(updateTourActiveId);
       const last=updateTourIndex===updateTourItems.length-1;
       $("updateTour").hidden=false;
-      $("updateTour").innerHTML=`<strong>更新 ${updateTourIndex+1}/${updateTourItems.length}</strong><button onclick="endUpdateTour()">结束查看</button><button onclick="nextUpdateStep()">${last ? "完成" : "下一处"}</button>`;
+      $("updateTour").innerHTML=`<strong>更新 ${updateTourIndex+1}/${updateTourItems.length}</strong><button onclick="endUpdateTour()">结束查看</button><button onclick="nextUpdateStep(event)">${last ? "完成" : "下一处"}</button>`;
     }
-    window.nextUpdateStep=()=>{updateTourIndex++;showTourStep();};
+    window.nextUpdateStep=event=>{event?.stopPropagation();updateTourIndex++;showTourStep();};
     window.endUpdateTour=()=>{updateHighlightCleanup?.();$("updateTour").hidden=true;updateTourItems=[];};
     function maybeShowUpdateNotice() {
       if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
@@ -1284,11 +1288,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       if([FEATURE_CATEGORY,ARCHIVE_CATEGORY].includes(item.category)) {
         state.featureTab=item.category===ARCHIVE_CATEGORY?"archive":"current";
         state.featureArchiveFocus=item.id;state.featureOpen=true;
-        if(state.featureTab==='current') markFeatureSeen();renderFeature();
+        if(state.featureTab==='current') markFeatureSeen();render();
         $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});highlightUpdateLocations(Array.from($("featureModule").querySelectorAll(".feature-panel")));return;
       }
       state.featureOpen=false;state.query="";state.section=(state.updateJumpIds || []).length>1 ? null : item.section;state.category=null;state.fixStatus=null;
-      for(const updatedId of state.updateJumpIds || [String(item.id)]) state.expanded.add(String(updatedId));
+
       $("query").value="";$("clearQuery").hidden=true;state.expanded.add(String(item.id));render();
       const card=document.getElementById("kb-item-"+item.id);
       if(card){highlightUpdateLocations([card]);card.scrollIntoView({behavior:"smooth",block:"start"});card.querySelector(".card-head")?.focus({preventScroll:true});}
@@ -2779,7 +2783,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
 
     init();
     document.addEventListener("click", (event) => {
-      if (state.featureOpen && !event.target.closest("#featureModule") && !event.target.closest("#imageLightbox")) {
+      if (state.featureOpen && !event.target.closest("#featureModule") && !event.target.closest("#imageLightbox") && !event.target.closest("#updateTour")) {
         state.featureOpen = false;
         state.featureFocusIndex = null;
         renderFeature();
