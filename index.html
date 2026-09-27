@@ -17,6 +17,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     try {
       const response = await fetch(endpoint + path, {...init, signal: controller.signal, headers: {...headers,...init.headers}, cache:"no-store"});
       const data = await response.json();
+      if (path === "/data" && data.kb_today_visits) window.showTodayVisits?.(data.kb_today_visits);
       return response.ok ? {data,error:null} : {data:null,error:{message:data.message || "请求失败"}};
     } catch (error) {
       return {data:null,error:{message:error.name === "AbortError" ? "连接超时，请稍后重试" : error.message}};
@@ -598,6 +599,48 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       .tags { gap: 4px; margin-top: 10px; }
       .tag { padding: 5px 8px; font-size: 12px; }
     }
+    .feature-split {display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;}
+    .feature-split > :last-child {border-left:1px solid var(--yw-dk);}
+    .feature-split .feature-title {font-size:18px;}
+    .feature-history {margin-bottom:16px;}
+    .feature-history > summary {cursor:pointer;padding:12px;font-weight:800;}
+    @media(max-width:600px){.feature-split .feature-toggle{gap:5px;padding:12px 8px;flex-wrap:wrap}.feature-split .feature-title{font-size:16px}.feature-split .feature-version-badge{font-size:11px;}}
+    .feature-module {border:0;background:transparent;box-shadow:none;}
+    .feature-split {gap:10px;}
+    .feature-split .feature-toggle {min-width:0;min-height:62px;padding:15px 18px;border:1px solid #e3cf9c;border-radius:13px;color:#66502c;box-shadow:0 2px 7px rgba(100,81,37,.035);}
+    .feature-split > :first-child,.feature-module.open .feature-split > :first-child {background:#f3cf55;border-color:#e5bf43;}
+    .feature-split > :last-child,.feature-module.open .feature-split > :last-child {background:#715339;border-color:#715339;color:#fff4df;}
+    .feature-split .feature-title {font-size:17px;font-weight:750;letter-spacing:.2px;}
+    .feature-split .feature-version-badge {border:0;background:rgba(255,255,255,.4);color:#79643c;font-weight:600;font-size:11px;padding:5px 8px;}
+    .feature-split .feature-arrow {font-size:19px;font-weight:500;color:#8e7950;transform:none;}
+    .feature-hit-target[aria-expanded="true"] ~ .feature-arrow {transform:rotate(180deg);}
+    .feature-hit-target:hover {background:rgba(255,255,255,.14);}
+    .feature-module.open {background:#fff;border:1px solid #e9dfc7;}
+    .feature-module.open .feature-split {padding:10px;}
+    .update-dot {display:inline-block;font-size:10px;font-weight:600;margin-left:7px;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.5);color:#816333;vertical-align:middle;letter-spacing:0;}
+    @media(max-width:600px){.feature-split{gap:8px}.feature-split .feature-toggle{min-height:62px;padding:11px 12px;gap:5px}.feature-split .feature-title{font-size:15px}.feature-split .feature-version-badge{font-size:10px;padding:3px 5px}.update-dot{font-size:9px;margin-left:4px;padding:2px 4px}}
+    .feature-other-section{margin-top:24px;padding-top:20px;border-top:1px solid var(--cr-bd);}
+    .internal-update-label{display:inline-block;border-radius:5px;padding:4px 7px;background:#edf3ee;color:#52705e;font-size:11px;font-weight:600;}
+    .feature-internal-note{margin:0 0 14px;color:#64756b;font-size:13px;line-height:1.7;}
+    .feature-split{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}
+    .feature-split .feature-toggle:first-child{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;}
+    .feature-split .feature-toggle:first-child .feature-title{grid-column:1;grid-row:1;}
+    .feature-meta{grid-column:1;grid-row:2;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .feature-split .feature-toggle:first-child .feature-arrow{grid-column:2;grid-row:1 / 3;}
+    .feature-split .feature-version-badge{font-size:15px;font-weight:750;background:transparent;padding:0;color:#604a23;}
+    .feature-update-date{font-size:12px;font-weight:500;color:#725c2e;white-space:nowrap;}
+    .feature-split .feature-toggle:last-child .feature-arrow{color:#ecdcc3;}
+    @media(max-width:600px){.feature-split .feature-title{font-size:14px}.feature-meta{gap:4px 10px}.feature-split .feature-version-badge{font-size:14px}.feature-update-date{font-size:10px}.feature-split .feature-toggle{padding:12px 10px;}}
+    #todayVisits[hidden]{display:none!important;}
+    .update-notice-kicker{color:#7b673a;font-size:12px;margin:3px 0 10px;letter-spacing:.5px;}
+    .update-notice-meta{color:#7c897e;font-size:12px;margin:0 0 20px;}
+    .update-notice-heading{font-size:14px;color:#315844;margin:18px 0 8px;}
+    .update-notice-summary{font-size:14px;line-height:1.85;color:#506357;white-space:pre-line;margin:0;}
+    .update-notice-actions{display:flex;gap:10px;margin-top:24px;}
+    .update-notice-actions .primary{flex:1;}
+    .feature-share-action {margin:0 0 15px;}
+    .share-update-card {max-width:900px;margin:0 auto;border:2px solid var(--yw-dk);border-radius:16px;background:#fff9e8;overflow:hidden;}
+    .share-update-note {padding:12px 20px;font-size:12px;color:#795e19;}
   </style>
 </head>
 <body>
@@ -614,7 +657,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         </div>
         <div class="admin-side">
           <button id="loginBtn" class="lock" title="管理员窗口">管理员窗口</button>
-          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div>
+          <div id="lastUpdated" class="last-updated"><span class="updated-label">最近更新时间：</span><span class="updated-value">读取中</span></div><div id="todayVisits" class="last-updated" style="font-size:11px" title="从上线统计开始，同一浏览器30分钟内重复打开去重；并非独立人数">今日浏览：读取中</div>
         </div>
       </div>
       <div id="infoBar" class="info" hidden><div id="infoRow" class="info-row"></div></div>
@@ -657,6 +700,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     ];
     const isClubSection = (section) => section === CLUB_SECTION;
     const FEATURE_CATEGORY = "App最新功能";
+    const ARCHIVE_CATEGORY = "App往期更新";
     const PIN_KEYWORD_MARKER = "__KB_PINNED__";
     const FEATURE_MODULE_TITLE = "学生端最新版上新功能";
     const SITE_TITLE = "思悦云学习App最新信息查询";
@@ -697,6 +741,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       featureDraftPosters: [],
       featureDraftItems: [],
       featureOpen: false,
+      featureTab: "current",
+      featureArchiveId: null,
       featureFocusIndex: null,
       featureEditing: false
     };
@@ -1043,6 +1089,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       subtitle: String(item?.subtitle || ""),
       content: String(item?.content || ""),
       image_url: String(item?.image_url || ""),
+      extra_images: Array.isArray(item?.extra_images) ? item.extra_images : [],
       file: null,
       previewUrl: ""
     });
@@ -1050,10 +1097,12 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       let version = "";
       let posters = [];
       let items = [];
+      let otherContent = "";
       if (feature?.content?.startsWith(FEATURE_DATA_PREFIX_V2)) {
         try {
           const parsed = JSON.parse(feature.content.slice(FEATURE_DATA_PREFIX_V2.length));
           version = String(parsed?.version || "");
+          otherContent = String(parsed?.other_content || "");
           posters = Array.isArray(parsed?.posters) ? parsed.posters.map(normalizeFeaturePoster).filter((poster) => poster.image_url) : [];
           items = Array.isArray(parsed?.items) ? parsed.items.map(normalizeFeatureItem) : [];
         } catch {}
@@ -1069,11 +1118,59 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           image_url: splitUrls(feature.image_url)[0] || ""
         })];
       }
-      if (includeDefaults && !items.length) items = Array.from({ length: 4 }, emptyFeatureItem);
-      return { version, posters: posters.slice(0, 3), items };
+      if (includeDefaults && !items.length) items = [emptyFeatureItem()];
+      return { version, posters: posters.slice(0, 3), items, otherContent };
+    };
+
+    window.showTodayVisits = value => {
+      const node=$("todayVisits");
+      if(node && Number.isFinite(value?.count)) node.textContent=`今日浏览：${value.count} 人次`;
+    };
+    async function recordVisit() {
+      try {
+        const now=Date.now();const day=new Date(now+8*3600000).toISOString().slice(0,10);
+        let visit;
+        try {visit=JSON.parse(localStorage.getItem("kb-visit-session") || "null");} catch {}
+        if (!visit || visit.day!==day || now-visit.at>30*60000) visit={id:crypto.randomUUID(),day,at:now};
+        visit.at=now;
+        try {localStorage.setItem("kb-visit-session",JSON.stringify(visit));} catch {}
+        const response=await fetch(SUPABASE_URL+"/visits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({visit_id:visit.id})});
+        if(response.ok) showTodayVisits(await response.json());
+      } catch {if($("todayVisits").textContent.includes("读取中")) $("todayVisits").textContent="今日浏览：暂不可用";}
+    }
+    function hasUnseenFeature(feature) {
+      if (!feature) return false;
+      try {return localStorage.getItem("kb-seen-update") !== feature.id+":"+feature.updated_at;} catch{return true;}
+    }
+    function markFeatureSeen() {
+      const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
+      if(feature) try {localStorage.setItem("kb-seen-update",feature.id+":"+feature.updated_at);} catch {}
+    }
+    function updateRevision(feature) {return feature.id+":"+feature.updated_at;}
+    function maybeShowUpdateNotice() {
+      if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show")) return;
+      const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
+      if (!feature) return;
+      const key=updateRevision(feature);
+      let remembered="";
+      try {remembered=localStorage.getItem("kb-update-notice") || "";} catch {}
+      if(remembered===key || state.lastNoticeRevision===key) return;
+      const data=parseFeatureData(feature);
+      const combined=mergedFeatureItem(data.items);
+      const summary=[combined.title,combined.subtitle,bodyContentText(combined.content)].filter(Boolean).join(" · ");
+      const other=bodyContentText(data.otherContent).trim();
+      state.lastNoticeRevision=key;
+      try {localStorage.setItem("kb-update-notice",key);} catch {}
+      modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">有新的更新</div><div class="update-notice-meta">${esc(data.version || sharedVersion())} · ${esc(new Date(feature.updated_at).toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai"}))}</div>${summary ? `<h3 class="update-notice-heading">外宣更新内容</h3><p class="update-notice-summary">${esc(summary.slice(0,190))}${summary.length>190?"…":""}</p>` : ""}${other ? `<h3 class="update-notice-heading">其他更新 <small class="internal-update-label">仅供内部知晓</small></h3><p class="update-notice-summary">${esc(other.slice(0,100))}${other.length>100?"…":""}</p><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p>` : ""}<div class="update-notice-actions"><button class="primary" onclick="openLatestUpdateNotice(event)">查看本次更新</button><button class="primary gray" onclick="closeModal()">稍后查看</button></div>`,true,"update-notice-modal");
+    }
+    window.openLatestUpdateNotice = (event) => {
+      event?.stopPropagation();
+      closeModal();state.featureTab="current";state.featureOpen=true;markFeatureSeen();renderFeature();
+      $("featureModule").querySelector(".feature-detail")?.scrollTo({top:0});
     };
 
     async function init() {
+      recordVisit();
       const firstLoad = loadAll();
       if (state.adminPassword) {
         const { data } = await db.rpc("kb_check_admin_password_v2", { p_password: state.adminPassword });
@@ -1086,6 +1183,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       await firstLoad;
       renderAdminTools();
       if (state.isAdmin) render();
+      state.initialized=true;
+      maybeShowUpdateNotice();
       startLiveSync();
     }
 
@@ -1124,6 +1223,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           ...state.info.map((item) => item.updated_at || item.created_at)
         ].filter(Boolean).sort().at(-1) || "";
         render();
+        maybeShowUpdateNotice();
       })().finally(() => { loadPromise = null; });
       return loadPromise;
     }
@@ -1150,33 +1250,23 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     }
 
     function currentFeatureSearchItems() {
-      const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
-      if (!feature) return [];
-      const { version, posters, items } = parseFeatureData(feature);
-      const displayVersion = sharedVersion();
-      return items.map((item, index) => ({
-        id: `feature-search-${feature.id}-${index}`,
-        section: "学生端",
-        category: "当前最新版功能",
-        title: item.title || `更新事项 ${index + 1}`,
-        content: [displayVersion ? `版本：${displayVersion}` : "", item.subtitle, bodyContentText(item.content)].filter(Boolean).join("\n"),
-        image_url: [
-          ...(index === 0 ? posters.map((poster) => poster.image_url) : []),
-          item.image_url
-        ].filter(Boolean).join("\n"),
-        video_url: "",
-        keywords: [featureModuleTitle(), "当前最新版功能", "上新", "海报", displayVersion, item.title, item.subtitle, bodyContentText(item.content)].filter(Boolean).join(" "),
-        created_at: feature.created_at,
-        updated_at: feature.updated_at,
-        _featureSearchResult: true,
-        _featureIndex: index,
-        _featureVersion: displayVersion
-      }));
+      return state.items.filter(f=>[FEATURE_CATEGORY,ARCHIVE_CATEGORY].includes(f.category)).flatMap(feature=>{
+        const archived=feature.category===ARCHIVE_CATEGORY;
+        const {posters,items,otherContent}=parseFeatureData(feature);
+        const searchable = bodyContentText(otherContent).trim() ? [...items,{title:"其他更新 · 仅供内部知晓",content:otherContent}] : items;
+        return searchable.map((item,index)=>({
+          id:`feature-search-${feature.id}-${index}`,section:"学生端",category:archived?"往期更新":"本次上新",
+          title:item.title || (archived?"往期更新内容":"本次更新内容"),content:[item.subtitle,bodyContentText(item.content)].filter(Boolean).join("\n"),
+          image_url:[...posters.map(p=>p.image_url),item.image_url,...(item.extra_images || [])].filter(Boolean).join("\n"),
+          keywords:[item.title,item.subtitle,bodyContentText(item.content)].join(" "),created_at:feature.created_at,updated_at:feature.updated_at,
+          _featureSearchResult:true,_featureIndex:index,_featureVersion:archived?"":sharedVersion(),_archiveId:archived?feature.id:null
+        }));
+      });
     }
 
     function filteredItems() {
       const q = state.query.trim().toLowerCase();
-      let list = state.items.filter((it) => normalizeCategory(it.category) !== FEATURE_CATEGORY);
+      let list = state.items.filter((it) => ![FEATURE_CATEGORY, ARCHIVE_CATEGORY].includes(normalizeCategory(it.category)));
       if (q) {
         list = [...currentFeatureSearchItems(), ...list];
         return list.map((it, originalIndex) => {
@@ -1214,186 +1304,117 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       renderList();
     }
 
-    function renderFeature() {
-      document.body.classList.toggle("feature-view-open", state.featureOpen && !state.featureEditing);
-      if (state.featureEditing) {
-        $("featureModule").className = "feature-module";
-        $("featureModule").hidden = true;
-        $("featureBackdrop").className = "feature-backdrop";
-        $("featureBackdrop").setAttribute("aria-hidden", "true");
-        return;
-      }
-      $("featureModule").hidden = false;
-      if (state.isAdmin && $("featureModule").contains(document.activeElement) && document.activeElement.matches("[data-header-field]")) return;
-      const feature = state.items.find((it) => normalizeCategory(it.category) === FEATURE_CATEGORY);
-      const { version, posters, items } = parseFeatureData(feature);
-      const displayVersion = sharedVersion();
-      const posterCards = posters.map((poster, index) => `
-        <div class="feature-poster-wrap">
-          <button class="feature-poster-button" data-url="${esc(mediaUrl(poster.image_url))}" data-alt="最新功能海报 ${index + 1}" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
-            <img class="feature-poster" src="${esc(mediaUrl(poster.image_url))}" alt="最新功能海报 ${index + 1}" onerror="this.parentElement.parentElement.style.display='none'">
-          </button>
-          <span class="feature-poster-label">海报 ${index + 1} · 点击预览</span>
-          <button class="image-download" data-url="${esc(mediaUrl(poster.image_url))}" data-name="最新功能海报${index + 1}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
-        </div>`).join("");
-      const itemCards = items.map((item, index) => `
-        <article id="feature-update-${index}" class="feature-update-card${state.featureFocusIndex === index ? " focus" : ""}">
-          <span class="feature-update-number">更新事项 ${index + 1}</span>
-          <h3 class="feature-update-title">${esc(item.title || `更新事项 ${index + 1}`)}</h3>
-          ${item.subtitle?.trim() ? `<div class="feature-update-subtitle">${linkifyText(item.subtitle)}</div>` : ""}
-          <div class="feature-update-content">${renderBodyContent(item.content || "暂无详细介绍。")}</div>
-          ${item.image_url ? `<div class="feature-update-image">
-            <button data-url="${esc(mediaUrl(item.image_url))}" data-alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onclick="openImagePreview(this.dataset.url, this.dataset.alt)">
-              <img src="${esc(mediaUrl(item.image_url))}" alt="${esc(item.title || `更新事项 ${index + 1}`)} 图片" onerror="this.parentElement.parentElement.style.display='none'">
-            </button>
-            <button class="image-download" data-url="${esc(mediaUrl(item.image_url))}" data-name="${esc(item.title || `更新事项${index + 1}`)}" onclick="downloadOriginalImage(event, this.dataset.url, this.dataset.name)">下载原图</button>
-          </div>` : ""}
-        </article>`).join("");
-      const posterSection = posters.length ? `
-        <section class="feature-poster-section">
-          <div class="feature-section-heading"><span>最新功能海报</span><small>${posters.length} 张</small></div>
-          <div class="feature-poster-grid">${posterCards}</div>
-        </section>` : "";
-      const detail = `
-        <div class="feature-detail">
-          <article class="feature-panel student">
-            <h2 class="feature-panel-title">学生端 <span>${displayVersion ? `版本 ${esc(displayVersion)} · ` : ""}${posters.length ? `${posters.length} 张海报 · ` : ""}${items.length} 项更新</span></h2>
-            ${posterSection}
-            <section class="feature-update-section">
-              <div class="feature-section-heading"><span>更新事项</span><small>${items.length} 项</small></div>
-              ${items.length ? `<div class="feature-update-list">${itemCards}</div>` : `<div class="feature-copy">${state.isAdmin ? "还没有发布更新事项，请点击下方按钮添加。" : "暂无最新功能介绍。"}</div>`}
-            </section>
-            ${state.isAdmin ? `<div class="feature-actions"><button class="primary" onclick="openFeatureEditor()">${feature ? "编辑海报与更新事项" : "＋ 添加海报与更新事项"}</button>${items.length ? `<button class="primary gray" onclick="requestArchiveFeatureItems()">一键转为学生端情况说明</button>` : ""}</div>` : ""}
-          </article>
-        </div>`;
-      $("featureModule").className = `feature-module${state.featureOpen ? " open" : ""}`;
-      $("featureBackdrop").className = `feature-backdrop${state.featureOpen ? " show" : ""}`;
-      $("featureBackdrop").setAttribute("aria-hidden", state.featureOpen ? "false" : "true");
-      $("featureModule").innerHTML = `
-        <div class="feature-toggle">
-          <button id="featureToggle" class="feature-hit-target" aria-expanded="${state.featureOpen}" aria-label="${esc(featureModuleTitle())}"></button>
-          <span class="feature-icon">✨</span>
-          <span id="featureTitle" class="feature-title" data-header-field="featureTitle">${esc(featureModuleTitle())}</span>
-          ${displayVersion || state.isAdmin ? `<span class="feature-version-badge">版本 <span id="featureHeaderVersion" data-header-field="version">${esc(displayVersion)}</span></span>` : ""}
-          <span class="feature-arrow">⌄</span>
-        </div>${state.featureOpen ? detail : ""}`;
-      syncHeaderFields();
-      $("featureToggle").addEventListener("click", (event) => {
-        event.stopPropagation();
-        state.featureOpen = !state.featureOpen;
-        if (!state.featureOpen) state.featureFocusIndex = null;
-        renderFeature();
-      });
-      if (state.featureOpen && Number.isInteger(state.featureFocusIndex)) {
-        window.requestAnimationFrame(() => $("feature-update-" + state.featureFocusIndex)?.scrollIntoView({ behavior: "smooth", block: "center" }));
-      }
+    function mergedFeatureItem(items) {
+      if (items.length === 1) return {...items[0], extra_images: items[0].extra_images || []};
+      const html = items.map(item => [
+        item.title ? `<h3>${esc(item.title)}</h3>` : "",
+        item.subtitle ? `<p>${esc(item.subtitle)}</p>` : "",
+        decodeRichContent(item.content) ?? `<p>${esc(item.content).replace(/\n/g,"<br>")}</p>`
+      ].join("")).join("");
+      const images = items.flatMap(item => [item.image_url, ...(item.extra_images || [])]).filter(Boolean);
+      return {...emptyFeatureItem(),title:"",subtitle:"",content:html ? encodeRichContent(html) : "",image_url:images[0] || "",extra_images:images.slice(1)};
     }
 
-    window.openFeatureSearchResult = (index, event) => {
+    function featureDetail(feature, archived = false) {
+      const {posters, items, otherContent} = parseFeatureData(feature);
+      const merged = mergedFeatureItem(items);
+      const picture = (url, label) => `<div class="feature-poster-wrap"><button class="feature-poster-button" data-url="${esc(mediaUrl(url))}" data-alt="${esc(label)}" onclick="openImagePreview(this.dataset.url,this.dataset.alt)"><img class="feature-poster" src="${esc(mediaUrl(url))}" alt="${esc(label)}" loading="lazy" decoding="async"></button><button class="image-download" data-url="${esc(mediaUrl(url))}" data-name="${esc(label)}" onclick="downloadOriginalImage(event,this.dataset.url,this.dataset.name)">下载原图</button></div>`;
+      const idArg = feature ? esc(JSON.stringify(String(feature.id))) : "null";
+      return `<article class="feature-panel student">
+        <h2 class="feature-panel-title">${archived ? "往期更新内容" : "思悦云学习 App 最新更新内容"}${!archived && sharedVersion() ? `<span>版本 ${esc(sharedVersion())}</span>` : ""}</h2>
+        ${state.isAdmin ? `<div class="feature-actions" style="margin:0 0 18px"><button class="primary" onclick="openFeatureEditor(false,${archived ? idArg : 'null'})">编辑</button>${!archived ? `<button class="primary gray" onclick="requestArchiveFeatureItems()" ${!feature ? 'disabled' : ''}>一键转</button>` : ""}</div>` : ""}
+        ${posters.length ? `<section class="feature-poster-section"><div class="feature-section-heading"><span>功能海报</span><small>${posters.length} 张</small></div><div class="feature-poster-grid">${posters.map((p,i)=>picture(p.image_url,`功能海报 ${i+1}`)).join("")}</div></section>` : ""}
+        <section class="feature-update-section"><div class="feature-section-heading"><span>外宣更新内容</span></div>
+          ${items.length ? `<article id="feature-update-0" class="feature-update-card">${merged.title ? `<h3 class="feature-update-title">${esc(merged.title)}</h3>` : ""}${merged.subtitle ? `<div class="feature-update-subtitle">${linkifyText(merged.subtitle)}</div>` : ""}<div class="feature-update-content">${renderBodyContent(merged.content)}</div>${[merged.image_url,...(merged.extra_images || [])].filter(Boolean).length ? `<div class="feature-poster-grid">${[merged.image_url,...(merged.extra_images || [])].filter(Boolean).map((u,i)=>picture(u,`更新图片 ${i+1}`)).join("")}</div>` : ""}</article>` : `<div class="feature-copy">暂无本次上新内容。</div>`}
+        </section>${bodyContentText(otherContent).trim() ? `<section class="feature-other-section"><div class="feature-section-heading"><span>其他更新</span><small class="internal-update-label">仅供内部知晓</small></div><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p><div class="feature-update-content">${renderBodyContent(otherContent)}</div></section>` : ""}</article>`;
+    }
+
+    function renderFeature() {
+      const open = state.featureOpen && !state.featureEditing;
+      document.body.classList.toggle("feature-view-open",open);
+      $("featureModule").hidden = state.featureEditing;
+      $("featureModule").className = `feature-module${open ? " open" : ""}`;
+      $("featureBackdrop").className = `feature-backdrop${open ? " show" : ""}`;
+      $("featureBackdrop").setAttribute("aria-hidden",String(!open));
+      if (state.featureEditing) return;
+      if (state.isAdmin && $("featureModule").contains(document.activeElement) && document.activeElement.matches("[data-header-field]")) return;
+      const current = state.items.find(i=>i.category === FEATURE_CATEGORY);
+      const unseen = hasUnseenFeature(current);
+      const archives = state.items.filter(i=>i.category === ARCHIVE_CATEGORY).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
+      $("featureModule").innerHTML = `<div class="feature-split">
+        <div class="feature-toggle"><button id="featureToggle" class="feature-hit-target" aria-expanded="${open && state.featureTab==='current'}" aria-label="思悦云学习 App 最新更新内容"></button><span class="feature-title">思悦云学习 App 最新更新内容${unseen ? `<small class="update-dot">有新更新</small>` : ""}</span>${sharedVersion() || state.isAdmin ? `<span class="feature-meta"><span class="feature-version-badge">版本 <span id="featureHeaderVersion" data-header-field="version">${esc(sharedVersion())}</span></span><span class="feature-update-date">更新日期 ${esc(current?.updated_at ? new Date(current.updated_at).toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}) : "—")}</span></span>` : ""}<span class="feature-arrow">⌄</span></div>
+        <div class="feature-toggle"><button id="featureArchiveToggle" class="feature-hit-target" aria-expanded="${open && state.featureTab==='archive'}" aria-label="往期更新"></button><span class="feature-title">往期更新</span><span class="feature-arrow">⌄</span></div>
+        </div>${open ? `<div class="feature-detail">${state.featureTab==='current' ? featureDetail(current) : archives.length ? archives.map(a=>`<details class="feature-history" ${String(state.featureArchiveFocus)===String(a.id) ? 'open' : ''}><summary>${esc((a.updated_at || a.created_at || '').slice(0,10))} · 往期更新</summary>${featureDetail(a,true)}</details>`).join("") : '<div class="feature-copy">暂无往期更新内容。</div>'}</div>` : ""}`;
+      syncHeaderFields();
+      for (const [id,tab] of [["featureToggle","current"],["featureArchiveToggle","archive"]]) $(id).onclick = event => {
+        event.stopPropagation(); state.featureOpen = !(state.featureOpen && state.featureTab===tab);state.featureTab=tab;if(tab==="current" && state.featureOpen) markFeatureSeen();state.featureFocusIndex=null;renderFeature();
+      };
+    }
+
+    window.openFeatureSearchResult = (index, event, archiveId = null) => {
       event?.stopPropagation();
-      state.featureFocusIndex = Number(index);
+      state.featureTab = archiveId ? "archive" : "current";
+      state.featureArchiveFocus=archiveId;
+      if(!archiveId) markFeatureSeen();
+      state.featureFocusIndex = 0;
       state.featureOpen = true;
       renderFeature();
     };
 
     window.requestArchiveFeatureItems = () => {
-      const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
-      const { version, items } = parseFeatureData(feature);
-      const meaningfulItems = items.filter((item) => item.title.trim() || item.content.trim());
-      if (!feature || !meaningfulItems.length) {
-        showToast("当前没有可归档的更新事项");
-        return;
-      }
-      state.featureOpen = false;
-      renderFeature();
-      const displayVersion = sharedVersion();
-      modal(`
-        <div class="modal-title">一键转为学生端情况说明</div>
-        <div class="hint">将把当前 ${meaningfulItems.length} 个更新事项分别生成普通的“学生端 · 情况说明”。版本号、正文和图片会保留，顶部海报会并入第一条内容。归档完成后会打开空白的新版本编辑页。</div>
-        <div class="status-panel" style="margin-top:12px"><b>${displayVersion ? `版本 ${esc(displayVersion)}` : "当前版本"}</b>${meaningfulItems.map((item) => esc(item.title || "未命名更新事项")).join("、")}</div>
-        <div id="archiveFeatureError" class="error"></div>
-        <button class="primary" style="width:100%;margin-top:18px" onclick="archiveFeatureItems(event)">确认归档并准备新版本</button>
-      `, true);
+      if (!state.isAdmin || state.featureSaving) return;
+      const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
+      if (!feature) return showToast("当前没有可转入的上新内容");
+      state.featureOpen=false;renderFeature();
+      modal(`<div class="modal-title">转入往期更新</div><div class="hint">本次上新的全部正文、排版和图片将整体移入“往期更新”，不再生成学生端情况说明。转入后本次上新位置留空，往期不显示版本号。</div><div id="archiveFeatureError" class="error"></div><button class="primary" style="margin-top:18px" onclick="archiveFeatureItems(event)">确认转入往期更新</button>`,true);
     };
-
-    window.archiveFeatureItems = async (event) => {
-      const button = event?.currentTarget;
-      if (button) button.disabled = true;
+    window.archiveFeatureItems = async event => {
+      if (!state.isAdmin || state.featureSaving) return;
+      const feature=state.items.find(i=>i.category===FEATURE_CATEGORY);
+      if (!feature) return;
+      state.featureSaving=true;
+      const release=lockModalForSave();
       try {
-        const feature = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY);
-        const { version, posters, items } = parseFeatureData(feature);
-        const displayVersion = sharedVersion();
-        const meaningfulItems = items.filter((item) => item.title.trim() || item.content.trim());
-        if (!feature || !meaningfulItems.length) throw new Error("当前没有可归档的更新事项。");
-        let createdCount = 0;
-        for (let index = 0; index < meaningfulItems.length; index += 1) {
-          const item = meaningfulItems[index];
-          const title = item.title.trim() || `更新事项 ${index + 1}`;
-          const prefix = [displayVersion ? `版本：${displayVersion}` : "", item.subtitle.trim()].filter(Boolean).join("\n");
-          const content = decodeRichContent(item.content) === null
-            ? [prefix, item.content.trim()].filter(Boolean).join("\n")
-            : encodeRichContent((prefix ? `<p>${esc(prefix).replace(/\n/g, "<br>")}</p>` : "") + decodeRichContent(item.content));
-          const imageUrls = [
-            ...(index === 0 ? posters.map((poster) => poster.image_url) : []),
-            item.image_url
-          ].filter(Boolean).slice(0, 5);
-          const alreadyExists = state.items.some((row) =>
-            row.section === "学生端" &&
-            normalizeCategory(row.category) === "情况说明" &&
-            String(row.title || "").trim() === title &&
-            bodyContentText(row.content).trim() === bodyContentText(content).trim()
-          );
-          if (alreadyExists) continue;
-          const res = await db.rpc("kb_admin_save_item_v2", {
-            p_password: state.adminPassword,
-            p_id: null,
-            p_section: "学生端",
-            p_category: "情况说明",
-            p_title: title,
-            p_content: content,
-            p_fix_status: "已修复",
-            p_fix_note: "",
-            p_image_url: imageUrls.join("\n"),
-            p_video_url: "",
-            p_keywords: [displayVersion, title, item.subtitle, bodyContentText(item.content)].filter(Boolean).join(" ")
-          });
-          if (res.error) throw res.error;
-          const saved = Array.isArray(res.data) ? res.data[0] : res.data;
-          if (saved?.id) state.items.unshift(saved);
-          createdCount += 1;
-        }
-        closeModal();
-        await loadAll();
-        showToast(createdCount ? `已归档 ${createdCount} 条学生端情况说明` : "这些内容已经归档过了");
-        openFeatureEditor(true);
-      } catch (error) {
-        $("archiveFeatureError").textContent = `归档失败：${error.message || "请重新登录管理员窗口。"}`;
-        if (button) button.disabled = false;
-      }
+        const result=await db.rpc("kb_admin_save_item_v2",{
+          p_password:state.adminPassword,p_id:feature.id,p_section:"学生端",p_category:ARCHIVE_CATEGORY,
+          p_title:"往期更新内容",p_content:feature.content,p_image_url:feature.image_url || "",p_video_url:feature.video_url || "",
+          p_fix_status:feature.fix_status || "",p_fix_note:feature.fix_note || "",p_keywords:feature.keywords || ""
+        });
+        if (result.error) throw result.error;
+        const saved=Array.isArray(result.data)?result.data[0]:result.data;
+        if (!saved?.id) throw new Error("未收到保存结果，请刷新后核对");
+        state.dataRevision=(state.dataRevision || 0)+1;
+        state.items=state.items.map(i=>String(i.id)===String(saved.id)?saved:i);
+        state.featureSaving=false;closeModal();state.featureTab="archive";state.featureOpen=true;state.featureArchiveFocus=saved.id;render();
+        showToast("已转入往期更新");await loadAll();
+      } catch(error) { $("archiveFeatureError").textContent=`转入失败：${error.message || "请稍后重试"}`; }
+      finally {state.featureSaving=false;release();}
     };
 
-    window.openFeatureEditor = (resetForNewVersion = false) => {
+    window.openFeatureEditor = (resetForNewVersion = false, archiveId = null) => {
+      if (!state.isAdmin) return;
+      state.featureArchiveId = archiveId;
       state.featureOpen = false;
       state.featureFocusIndex = null;
       state.featureEditing = true;
       renderFeature();
       for (const entry of state.pendingImageFiles) URL.revokeObjectURL(entry.previewUrl);
       state.pendingImageFiles = [];
-      const it = state.items.find((item) => normalizeCategory(item.category) === FEATURE_CATEGORY) || {
+      const it = state.items.find((item) => archiveId ? String(item.id) === String(archiveId) && item.category === ARCHIVE_CATEGORY : item.category === FEATURE_CATEGORY) || {
         section: "学生端", category: FEATURE_CATEGORY, title: "", content: "", fix_status: "修复中", fix_note: "", image_url: "", video_url: "", keywords: ""
       };
       const draft = resetForNewVersion
-        ? { version: "", posters: [], items: Array.from({ length: 4 }, emptyFeatureItem) }
+        ? { version: "", posters: [], items: [emptyFeatureItem()] }
         : parseFeatureData(it.id ? it : null, true);
-      state.featureDraftVersion = resetForNewVersion ? "" : sharedVersion();
+      state.featureDraftVersion = archiveId ? draft.version : resetForNewVersion ? "" : sharedVersion();
       state.featureSavedId = it.id || null;
       state.featureDraftPosters = draft.posters;
-      state.featureDraftItems = draft.items;
+      state.featureDraftItems = [mergedFeatureItem(draft.items)];
+      state.featureDraftOther = draft.otherContent || "";
       modal(`
-        <div class="modal-title">编辑学生端最新功能</div>
-        <div class="hint">${resetForNewVersion ? "旧版已归档，请在这里录入下一版本；保存前，旧版仍会继续在线展示。" : "版本号会直接显示在上新功能标题旁。海报最多3张，保存后会优先展示在最上方；下方为可添加或删除的更新事项。"}</div>
-        <label>本次上新版本号</label>
-        <input id="featureVersion" class="field" value="${esc(state.featureDraftVersion)}" placeholder="例如：1.6.0" oninput="state.featureDraftVersion = this.value">
+        <div class="modal-title">${archiveId ? "编辑往期更新" : "编辑本次上新"}</div>
+        <div class="hint">分为“外宣更新内容”和“其他更新”，均支持富文本排版。“其他更新”留空时不会展示。</div>
+        ${!archiveId ? `<label>本次上新版本号</label><input id="featureVersion" class="field" value="${esc(state.featureDraftVersion)}" oninput="state.featureDraftVersion = this.value">` : ""}
         <section class="feature-poster-editor">
           <div class="feature-edit-head"><span>顶部海报</span><span id="featurePosterCount"></span></div>
           <label>海报图片（最多3张，可分多次选择）</label>
@@ -1401,9 +1422,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           <div id="featurePosterEditList"></div>
         </section>
         <div id="featureEditList" class="feature-edit-list"></div>
-        <div class="feature-editor-toolbar"><button class="primary gray" onclick="addFeatureItem()">＋ 添加更新事项</button></div>
+
         <div id="editError" class="error"></div>
-        <button class="primary" style="width:100%;margin-top:18px" onclick="saveFeatureItems(event, '${it.id || ""}')">保存海报与全部更新事项</button>
+        <button class="primary" style="width:100%;margin-top:18px" onclick="saveFeatureItems(event, '${it.id || ""}')">保存</button>
       `, false, "feature-editor-modal");
       renderFeatureEditor();
     };
@@ -1422,8 +1443,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         const preview = item.previewUrl || item.image_url;
         return `
           <section class="feature-edit-card">
-            <div class="feature-edit-head"><span>更新事项 ${index + 1}</span><button class="feature-edit-remove" onclick="removeFeatureItem(${index})">删除此项</button></div>
-            <label>主标题</label>
+            <div class="feature-edit-head"><span>外宣更新内容</span></div>
+            <label>主标题（选填）</label>
             <input class="field" value="${esc(item.title)}" placeholder="例如：积分商城全新上线" oninput="updateFeatureItem(${index}, 'title', this.value)">
             <label>副标题（选填，不填写则不显示）</label>
             <input class="field" value="${esc(item.subtitle)}" placeholder="例如：积分可兑换更多学习奖励" oninput="updateFeatureItem(${index}, 'subtitle', this.value)">
@@ -1434,6 +1455,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
             ${preview ? `<div class="feature-edit-image-preview"><img src="${esc(mediaUrl(preview))}" alt="更新事项${index + 1}图片"><button title="移除图片" onclick="removeFeatureItemImage(${index})">×</button></div>` : `<div class="hint" style="margin-top:6px">尚未选择图片</div>`}
           </section>`;
       }).join("");
+      $("featureEditList").insertAdjacentHTML("beforeend", `<section class="feature-edit-card"><div class="feature-edit-head"><span>其他更新（选填）</span><small class="internal-update-label">仅供内部知晓</small></div><p class="feature-internal-note">以下功能已同步更新，仅供老师内部知晓，不用于对外宣传，请老师留意相关变更。</p><label for="featureOtherContent">其他更新内容（留空不显示）</label>${richEditorMarkup("featureOtherContent")}</section>`);
+      setupRichEditor(state.featureDraftOther, "featureOtherContent", content => {state.featureDraftOther=content;});
       state.featureDraftItems.forEach((item, index) => setupRichEditor(item.content, `featureContent${index}`, (content) => { item.content = content; }));
     }
 
@@ -1526,11 +1549,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         $("editError").textContent = "正在上传海报和图片并保存…";
         if (state.featureDraftPosters.length > 3) throw new Error("海报最多上传3张。");
         const savedVersion = state.featureDraftVersion.trim();
-        if (!savedVersion) throw new Error("请填写本次上新版本号。");
+        if (!state.featureArchiveId && !savedVersion) throw new Error("请填写本次上新版本号。");
         const meaningfulItems = state.featureDraftItems.filter((item) =>
-          item.title.trim() || item.subtitle.trim() || item.content.trim() || item.image_url || item.file
+          item.title.trim() || item.subtitle.trim() || bodyContentText(item.content).trim() || item.image_url || item.file
         );
-        if (!meaningfulItems.length) throw new Error("请至少填写一个更新事项。");
+        if (!meaningfulItems.length && !bodyContentText(state.featureDraftOther).trim()) throw new Error("请至少填写一部分更新内容。");
         const savedPosterUrls = [];
         for (let index = 0; index < state.featureDraftPosters.length; index += 1) {
           const poster = state.featureDraftPosters[index];
@@ -1544,7 +1567,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         const savedItems = [];
         for (let index = 0; index < meaningfulItems.length; index += 1) {
           const item = meaningfulItems[index];
-          if (!item.title.trim() || !bodyContentText(item.content).trim()) throw new Error(`更新事项 ${index + 1} 需要填写主标题和正文内容。`);
+          if (!bodyContentText(item.content).trim()) throw new Error("请填写本次更新内容。");
           const imageUrl = await uploadFeatureItemImage(item, index);
           item.image_url = imageUrl;
           item.file = null;
@@ -1552,20 +1575,21 @@ window.siyueCloud = {createClient(base, unused, options={}) {
             title: item.title.trim(),
             subtitle: item.subtitle.trim(),
             content: normalizeBodyContent(item.content),
-            image_url: imageUrl
+            image_url: imageUrl,
+            extra_images: item.extra_images || []
           });
         }
-        const encodedContent = FEATURE_DATA_PREFIX_V2 + JSON.stringify({ version: savedVersion, posters: savedPosterUrls, items: savedItems });
+        const encodedContent = FEATURE_DATA_PREFIX_V2 + JSON.stringify({ version: savedVersion, posters: savedPosterUrls, items: savedItems, other_content: bodyContentText(state.featureDraftOther).trim() ? normalizeBodyContent(state.featureDraftOther) : "" });
         const res = await db.rpc("kb_admin_save_item_v2", {
           p_password: state.adminPassword,
           p_id: state.featureSavedId || id || null,
           p_section: "学生端",
-          p_category: FEATURE_CATEGORY,
-          p_title: featureModuleTitle(),
+          p_category: state.featureArchiveId ? ARCHIVE_CATEGORY : FEATURE_CATEGORY,
+          p_title: state.featureArchiveId ? "往期更新内容" : featureModuleTitle(),
           p_content: encodedContent,
           p_fix_status: "修复中",
           p_fix_note: "",
-          p_image_url: [...savedPosterUrls, ...savedItems.map((item) => item.image_url).filter(Boolean)].join("\n"),
+          p_image_url: [...savedPosterUrls, ...savedItems.flatMap((item) => [item.image_url, ...(item.extra_images || [])]).filter(Boolean)].join("\n"),
           p_video_url: "",
           p_keywords: [savedVersion, ...savedItems.flatMap((item) => [item.title, item.subtitle, bodyContentText(item.content)])].filter(Boolean).join(" ")
         });
@@ -1577,12 +1601,14 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           state.items = [saved, ...state.items.filter((item) => String(item.id) !== String(saved.id))];
         }
         contentSaved = true;
-        await persistHeaderEdits({ version: savedVersion });
+        if (!state.featureArchiveId) await persistHeaderEdits({ version: savedVersion });
         state.featureSaving = false;
         closeModal();
+        state.featureTab = state.featureArchiveId ? "archive" : "current";
+        state.featureArchiveFocus = state.featureArchiveId;
         state.featureOpen = true;
         render();
-        showToast("海报与最新功能已保存");
+        showToast("更新内容已保存");
         await loadAll();
       } catch (error) {
         $("editError").textContent = `${contentSaved ? "海报和更新事项已保存，标题与版本同步失败，请重试保存" : "保存失败"}：${error.message || "请重新登录管理员窗口。"}`;
@@ -1657,7 +1683,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         };
       });
       document.title = values.siteTitle || SITE_TITLE;
-      $("featureToggle")?.setAttribute("aria-label", `${values.featureTitle}${values.version ? ` 版本 ${values.version}` : ""}`);
+      $("featureToggle")?.setAttribute("aria-label", "思悦云学习 App 最新更新内容");
     }
 
     function mergeHeaderInfo(rows, changes) {
@@ -1825,11 +1851,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         const summary = it.content;
         return `
           <article class="card feature-search-card">
-            <button class="card-head" onclick="openFeatureSearchResult(${it._featureIndex}, event)">
+            <button class="card-head" onclick="openFeatureSearchResult(${it._featureIndex}, event, ${esc(JSON.stringify(it._archiveId || null))})">
               <span class="dot" style="background:var(--yw-dk);margin-top:7px"></span>
               <span class="card-title-wrap">
                 <span class="title">${esc(it.title)}</span>
-                <span class="mini-tags"><span class="mini-tag" style="border-color:var(--yw-dk);color:#7b6205;background:#fff9df">当前最新版功能</span>${it._featureVersion ? `<span class="mini-tag">版本 ${esc(it._featureVersion)}</span>` : ""}</span>
+                <span class="mini-tags"><span class="mini-tag" style="border-color:var(--yw-dk);color:#7b6205;background:#fff9df">${it._archiveId ? "往期更新" : "本次上新"}</span>${it._featureVersion ? `<span class="mini-tag">版本 ${esc(it._featureVersion)}</span>` : ""}</span>
                 <span class="feature-search-summary">${esc(summary)}</span>
               </span>
               <span class="feature-search-open">打开查看 ›</span>
