@@ -647,7 +647,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     @media(max-width:700px){.head{position:relative;display:block;padding:8px 0;}.head > .header-main{display:flex;flex-direction:column;gap:6px;width:100%;}.title-line{display:flex;align-content:flex-start;align-items:center;gap:6px;min-height:82px;padding-right:148px;}.title-line h1{font-size:18px;line-height:1.3;text-wrap:wrap;}.title-line .internal-note{font-size:10px;line-height:1.4;white-space:normal;}.support-note{width:fit-content;max-width:100%;margin:0;}.admin-side{position:absolute;top:8px;right:0;width:138px;align-items:flex-end;gap:3px;}.last-updated{font-size:9.5px;}.lock{padding:3px 7px;font-size:10px;}}
     @media(max-width:360px){.title-line{padding-right:132px;}.title-line h1{font-size:16px;}.title-line .internal-note{font-size:9px;}.admin-side{width:122px;}}
     .visits-navigation{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:2px 9px;}.updates-nav-link{padding:0;border:0;background:none;color:inherit;font-size:10px;line-height:1.5;text-decoration:underline;text-underline-offset:2px;}
-    .recent-updates-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0 0 14px;padding:12px 15px;border:1px solid #dec678;border-radius:11px;background:#fff4cf;color:#624c20;text-align:left;cursor:pointer;font-size:13px;font-weight:700;}.recent-updates-entry[hidden]{display:none}.recent-updates-entry strong{display:block;font-size:14px}.recent-updates-entry small{display:block;margin-top:3px;font-size:11px;font-weight:400}.recent-updates-entry .entry-action{white-space:nowrap;}
     .update-location-list{display:grid;gap:9px;margin-top:18px;}
     .update-location{display:grid;grid-template-columns:1fr auto;gap:5px 12px;text-align:left;background:#f4f7f1;border:1px solid #dce6d9;border-radius:10px;padding:13px 14px;color:#294e39;}
     .update-location-section{font-size:11px;color:#7e8e7c;grid-column:1;}
@@ -689,7 +688,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
   <main class="wrap">
     <div id="featureBackdrop" class="feature-backdrop" aria-hidden="true"></div>
     <section id="featureModule" class="feature-module" aria-label="App 最新功能"></section>
-    <button id="recentUpdatesEntry" class="recent-updates-entry" hidden onclick="showUpdateLocations(event)"><span><strong id="recentUpdatesLabel"></strong><small>点击查看位置，直接定位并展开</small></span><span class="entry-action">查看更新 ›</span></button>
     <div class="search">
       <span>🔎</span>
       <input id="query" placeholder="请输入问题相关关键词，比如朗读、积分、希沃、学习机">
@@ -1209,11 +1207,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const h=noticeHistory();
       return recentUpdateItems().filter(i=>!h.seen || h.seen[String(i.id)]!==contentFingerprint(i));
     }
-    function renderUpdateEntry() {
-      const count=recentUpdateItems().length;
-      $("recentUpdatesEntry").hidden=!count;
-      $("recentUpdatesLabel").textContent=`近 48 小时有 ${count} 处更新`;
-    }
     function renderUpdateNavigation(items) {
       const label=i=>i.category===FEATURE_CATEGORY ? "思悦云学习 App 最新更新内容" : i.category===ARCHIVE_CATEGORY ? "往期更新 · 版本 "+(parseFeatureData(i).version || "未记录") : i.title;
       modal(`<div class="update-notice-kicker">思悦云学习 App</div><div class="modal-title">这些位置有更新</div><p class="hint">以下为近 48 小时的更新位置，点击标题即可定位并展开。</p><div class="update-location-list">${items.map(i=>`<button class="update-location" data-item-id="${esc(String(i.id))}" onclick="openUpdateLocation(this.dataset.itemId,event)"><span class="update-location-section">${esc(i.section || "更新内容")}</span><span class="update-location-title">${esc(label(i))}</span><span class="update-location-arrow">查看 ›</span></button>`).join("")}</div><button class="primary gray" style="width:100%;margin-top:16px" onclick="closeModal()">稍后查看</button>`,true,"update-notice-modal");
@@ -1287,7 +1280,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           return;
         }
         const liveSignature = JSON.stringify([itemsRes.data, infoRes.data, metaRes.data]);
-        if (lastLiveSignature === liveSignature) {renderUpdateEntry();return;}
+        if (lastLiveSignature === liveSignature) return;
         lastLiveSignature = liveSignature;
         state.items = (itemsRes.data || []).sort((a, b) => {
           const timeDiff = new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -1379,7 +1372,6 @@ window.siyueCloud = {createClient(base, unused, options={}) {
 
     function render() {
       renderHeader();
-      renderUpdateEntry();
       renderFeature();
       renderFilters();
       renderAdminTools();
