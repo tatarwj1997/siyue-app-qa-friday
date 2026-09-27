@@ -1220,6 +1220,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     const UPDATE_WINDOW_MS=48*60*60*1000;
     function recentUpdateItems(now=Date.now()) {
       return state.items.filter(i=>{
+        if(i.category===ARCHIVE_CATEGORY) return false;
         const at=Date.parse(i.updated_at || i.created_at || "");
         return Number.isFinite(at) && at<=now && now-at<=UPDATE_WINDOW_MS;
       }).sort((a,b)=>Date.parse(b.updated_at || b.created_at)-Date.parse(a.updated_at || a.created_at));
@@ -1243,7 +1244,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       showTourStep();
     }
     function showTourStep() {
-      updateTourItems=updateTourItems.filter(id=>state.items.some(i=>String(i.id)===id));
+      updateTourItems=updateTourItems.filter(id=>recentUpdateItems().some(i=>String(i.id)===id));
       if(updateTourIndex>=updateTourItems.length){endUpdateTour();return;}
       if(updateTourActiveId) state.expanded.delete(updateTourActiveId);
       state.featureOpen=false;state.featureArchiveFocus=null;
