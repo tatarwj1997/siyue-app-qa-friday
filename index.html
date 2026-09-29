@@ -454,6 +454,10 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .media-thumb-wrap { position: relative; width: 100%; aspect-ratio: 1; border: 1.5px solid var(--cr-bd); border-radius: 8px; overflow: hidden; background: var(--gn-soft); }
     .media-thumb-btn { width: 100%; height: 100%; border: 0; padding: 0; background: transparent; }
     .media-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .card.pinned .media-grid { grid-template-columns: minmax(0, 1fr); }
+    .card.pinned .media-thumb-wrap { aspect-ratio: auto; }
+    .card.pinned .media-thumb-btn { display: block; height: auto; }
+    .card.pinned .media-thumb { height: auto; object-fit: contain; }
     .media-preview-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 5px 4px; background: rgba(26,44,34,.82); color: #fff; font-size: 11px; line-height: 1.2; font-weight: 900; text-align: center; }
     .video-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--gn-deep); background: var(--gn-soft); border: 1.5px solid var(--gn-lt); border-radius: 20px; padding: 7px 13px; font-size: 13px; font-weight: 800; text-decoration: none; }
     .video-player-wrap { width: min(100%, 720px); display: grid; gap: 8px; margin-top: 12px; }
@@ -1225,9 +1229,28 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         return Number.isFinite(at) && at<=now && now-at<=UPDATE_WINDOW_MS;
       }).sort((a,b)=>Date.parse(b.updated_at || b.created_at)-Date.parse(a.updated_at || a.created_at));
     }
+    function saveNoticeHistory() {
+      try {localStorage.setItem("kb-update-navigation-v1",JSON.stringify(noticeHistory()));} catch {}
+    }
     function currentUpdateTargets() {
       const h=noticeHistory();
-      return recentUpdateItems().filter(i=>!h.seen || h.seen[String(i.id)]!==contentFingerprint(i));
+      h.pending ||= {};h.notified ||= {};
+      const valid=state.items.filter(i=>i.category!==ARCHIVE_CATEGORY);
+      const firstIds=new Set(recentUpdateItems().map(i=>String(i.id)));
+      for(const i of valid) {
+        const id=String(i.id),fp=contentFingerprint(i);
+        if(h.seen ? h.seen[id]!==fp : firstIds.has(id)) h.pending[id]=fp;
+      }
+      const ids=new Set(valid.map(i=>String(i.id)));
+      for(const id of Object.keys(h.pending)) if(!ids.has(id)) {delete h.pending[id];delete h.notified[id];}
+      h.seen=Object.fromEntries(state.items.map(i=>[String(i.id),contentFingerprint(i)]));
+      h.lastVisitedAt=new Date().toISOString();saveNoticeHistory();
+      return valid.filter(i=>h.pending[String(i.id)]).sort((a,b)=>Date.parse(b.updated_at||b.created_at)-Date.parse(a.updated_at||a.created_at));
+    }
+    function markTourItemRead() {
+      const h=noticeHistory(),id=updateTourActiveId;
+      if(id && h.pending?.[id]===updateTourFingerprints[id]) delete h.pending[id];
+      saveNoticeHistory();
     }
     function renderUpdateNavigation(items) {
       state.updateJumpIds=items.map(i=>String(i.id));
@@ -1237,14 +1260,15 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       document.querySelector(".update-notice-modal > .close").setAttribute("aria-label","关闭");
       $("quickUpdateJump").onclick=event=>{event.stopPropagation();startUpdateTour(items);};
     }
-    let updateTourItems=[],updateTourIndex=0,updateTourActiveId=null;
+    let updateTourItems=[],updateTourIndex=0,updateTourActiveId=null,updateTourFingerprints={};
     function startUpdateTour(items) {
+      updateTourFingerprints=Object.fromEntries(items.map(i=>[String(i.id),contentFingerprint(i)]));
       updateTourItems=items.map(i=>String(i.id));updateTourIndex=0;updateTourActiveId=null;
       for(const id of updateTourItems) state.expanded.delete(id);
       showTourStep();
     }
     function showTourStep() {
-      updateTourItems=updateTourItems.filter(id=>recentUpdateItems().some(i=>String(i.id)===id));
+      while(updateTourIndex<updateTourItems.length && !state.items.some(i=>String(i.id)===updateTourItems[updateTourIndex] && i.category!==ARCHIVE_CATEGORY)) updateTourIndex++;
       if(updateTourIndex>=updateTourItems.length){endUpdateTour();return;}
       if(updateTourActiveId) state.expanded.delete(updateTourActiveId);
       state.featureOpen=false;state.featureArchiveFocus=null;
@@ -1257,9 +1281,10 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     window.nextUpdateStep=event=>{
       event?.stopPropagation();
       if(updateTourIndex>=updateTourItems.length-1){completeUpdateTour();return;}
-      updateTourIndex++;showTourStep();
+      markTourItemRead();updateTourIndex++;showTourStep();
     };
     function completeUpdateTour() {
+      markTourItemRead();
       for(const id of updateTourItems) state.expanded.delete(String(id));
       if(updateTourActiveId) state.expanded.delete(String(updateTourActiveId));
       endUpdateTour();updateTourActiveId=null;
@@ -1274,18 +1299,18 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     window.endUpdateTour=()=>{updateHighlightCleanup?.();$("updateTour").hidden=true;updateTourItems=[];};
     function maybeShowUpdateNotice() {
       if (!state.initialized || state.isAdmin || state.featureEditing || state.featureOpen || $("modalLayer").classList.contains("show") || !state.items.length) return;
-      const items=currentUpdateTargets();
-      const h=noticeHistory();
-      h.seen=Object.fromEntries(state.items.map(i=>[String(i.id),contentFingerprint(i)]));
-      h.targets=items.map(i=>String(i.id));
-      try {localStorage.setItem("kb-update-navigation-v1",JSON.stringify(h));} catch {}
-      if(items.length) renderUpdateNavigation(items);
+      const pending=currentUpdateTargets(),h=noticeHistory();
+      const items=pending.filter(i=>h.notified[String(i.id)]!==contentFingerprint(i));
+      if(items.length) {
+        for(const i of items) h.notified[String(i.id)]=contentFingerprint(i);
+        saveNoticeHistory();renderUpdateNavigation(items);
+      }
     }
     window.showUpdateLocations = event => {
       event?.stopPropagation();
       endUpdateTour();
-      const targets=recentUpdateItems();
-      if(!targets.length){showToast("近 48 小时暂无更新");return;}
+      const targets=currentUpdateTargets();
+      if(!targets.length){showToast("暂无未查看的更新");return;}
       state.featureOpen=false;renderFeature();renderUpdateNavigation(targets);
     };
     let updateHighlightCleanup=null;
@@ -1359,8 +1384,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           return timeDiff || String(b.id).localeCompare(String(a.id));
         });
         const currentIds = new Set(state.items.map((item) => String(item.id)));
-        for (const id of currentIds) {
-          if (!state.knownItemIds.has(id)) state.expanded.add(id);
+        for (const item of state.items) {
+          const id=String(item.id);
+          if (!state.knownItemIds.has(id) && isPinned(item)) state.expanded.add(id);
         }
         state.knownItemIds = currentIds;
         state.info = infoRes.data || [];
@@ -2598,6 +2624,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       const saved = Array.isArray(res.data) ? res.data[0] : res.data;
       const updated = saved?.id ? saved : { ...item, keywords: nextKeywords };
       state.items = state.items.map((row) => String(row.id) === String(id) ? updated : row);
+      if(nextPinned) state.expanded.add(String(id));else state.expanded.delete(String(id));
       render();
       showToast(nextPinned ? `已置顶到${item.section}` : "已取消置顶");
       await loadAll();
