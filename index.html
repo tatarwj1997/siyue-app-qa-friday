@@ -686,6 +686,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .share-update-card {max-width:900px;margin:0 auto;border:2px solid var(--yw-dk);border-radius:16px;background:#fff9e8;overflow:hidden;}
     .share-update-note {padding:12px 20px;font-size:12px;color:#795e19;}
   </style>
+<style id="exam-summary-style">
+#exam-summary-dialog{width:min(900px,calc(100vw - 28px));max-height:85vh;border:0;border-radius:18px;padding:0;color:var(--text,#233);box-shadow:0 18px 80px #0004}#exam-summary-dialog::backdrop{background:#0b173a88}#exam-summary-dialog header{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;background:#fff;padding:18px 22px;border-bottom:1px solid #e2e8f0;z-index:1}#exam-summary-dialog h2{margin:0;font-size:22px}#exam-summary-dialog .exam-copy{padding:10px 22px 24px}#exam-summary-dialog details{border:1px solid #dce3ee;border-radius:12px;margin:12px 0;padding:14px}#exam-summary-dialog summary{cursor:pointer;font-weight:700}#exam-summary-dialog .exam-body{line-height:1.8;margin-top:12px;overflow-wrap:anywhere}#exam-summary-dialog img{max-width:100%;height:auto}#exam-summary-entry{position:fixed;right:18px;bottom:20px;z-index:90;padding:12px 18px;border-radius:24px;background:#173e85;color:#fff;border:0;box-shadow:0 4px 20px #0003;cursor:pointer}
+</style>
 </head>
 <body>
   <div class="top">
@@ -1468,7 +1471,43 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       return list;
     }
 
+
+    const EXAM_SUMMARY_START=Date.parse('2026-10-09T00:00:00+08:00');
+    const EXAM_SUMMARY_END=Date.parse('2026-10-10T09:30:00+08:00');
+    const EXAM_SUMMARY_REFS=[{"id": "41c97516-c36a-4417-8643-23a5e695abd7", "title": "为什么学生还在读但是班级信息都不见了？"}, {"id": "4758f827-8aab-4d53-b2fe-3ce503cb48ba", "title": "能力手册积分逻辑升级"}, {"id": "8cc19df8-5ad2-4cdd-b745-da7d9963065f", "title": "学生想读的书系统里没有怎么办？如何提报？"}, {"id": "b4e8571c-1003-4722-a4e3-1669f40321a7", "title": "学生调转班情况信息老师怎么查看？如何得知？"}, {"id": "d0483212-ee94-4785-ba6d-3802f08c6bc9", "title": "口语AI批改适配/口语作业显示提交图片/口语作业为什么不能上传视频Mp4?"}, {"id": "5981e9ea-996b-42dc-9aed-53fc14f2da73", "title": "思悦云学习有电脑端或者网页端吗？"}, {"id": "2dba394a-b175-4d64-8e28-1bb54ff577e9", "title": "Club里书/篇章点进去是空白或者空的"}, {"id": "98fdd235-879f-40a5-a032-ecb17ff32b93", "title": "Reading Community 功能升级"}, {"id": "1026de81-f7e8-4f72-abdb-6b9a82a05b9a", "title": "学生做任务传错内容怎么办？能撤回吗？"}];
+    let examSummaryShown=false, examSummarySignature='';
+    function syncExamSummary(){
+      const active=Date.now()>=EXAM_SUMMARY_START && Date.now()<EXAM_SUMMARY_END;
+      if(!active){
+        const dialog=document.getElementById('exam-summary-dialog');
+        if(dialog){if(dialog.open)dialog.close();dialog.remove();}
+        document.getElementById('exam-summary-entry')?.remove();
+        return;
+      }
+      if(!state.items.length)return;
+      let dialog=document.getElementById('exam-summary-dialog');
+      if(!dialog){
+        dialog=document.createElement('dialog');dialog.id='exam-summary-dialog';
+        dialog.setAttribute('aria-labelledby','exam-summary-title');
+        dialog.innerHTML='<header><div><h2 id="exam-summary-title">10月9日云学习小测内容巩固</h2><small>10月10日 09:30 自动关闭（北京时间）</small></div><button type="button" aria-label="关闭汇总窗口">关闭</button></header><div class="exam-copy"><p>以下汇总引用网站已有内容。点击标题展开查看。</p><div id="exam-summary-items"></div></div>';
+        dialog.querySelector('button').onclick=()=>dialog.close();
+        document.body.appendChild(dialog);
+        const entry=document.createElement('button');entry.id='exam-summary-entry';entry.textContent='10月9日云学习小测内容巩固';entry.onclick=()=>{if(Date.now()<EXAM_SUMMARY_END)dialog.showModal();else syncExamSummary();};document.body.appendChild(entry);
+      }
+      const entries=EXAM_SUMMARY_REFS.map(ref=>({ref,item:state.items.find(item=>String(item.id)===ref.id)}));
+      const signature=JSON.stringify(entries.map(e=>e.item));
+      if(signature!==examSummarySignature){
+        examSummarySignature=signature;
+        document.getElementById('exam-summary-items').innerHTML=entries.map(({ref,item},i)=>'<details><summary>'+esc((i+1)+'. '+(item?.title||ref.title))+'</summary><div class="exam-body">'+(item?(renderBodyContent(item.content)+(item.image_url?'<p><img src="'+esc(mediaUrl(item.image_url))+'" alt="'+esc(item.title)+'" loading="lazy"></p>':'')):'该条内容暂不可用，请在网站中查询。')+'</div></details>').join('');
+      }
+      if(!examSummaryShown){examSummaryShown=true;dialog.showModal();}
+    }
+    window.setInterval(syncExamSummary,1000);
+    window.addEventListener('focus',syncExamSummary);
+    document.addEventListener('visibilitychange',syncExamSummary);
+
     function render() {
+      syncExamSummary();
       renderHeader();
       renderFeature();
       renderFilters();
