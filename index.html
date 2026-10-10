@@ -1473,7 +1473,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
 
 
     const EXAM_SUMMARY_START=Date.parse('2026-10-09T09:30:00+08:00');
-    const EXAM_SUMMARY_END=Date.parse('2026-10-10T09:30:00+08:00');
+    const EXAM_SUMMARY_END=Date.parse('2026-10-16T00:00:00+08:00');
     const EXAM_SUMMARY_REFS=[{"id": "41c97516-c36a-4417-8643-23a5e695abd7", "title": "为什么学生还在读但是班级信息都不见了？"}, {"id": "4758f827-8aab-4d53-b2fe-3ce503cb48ba", "title": "能力手册积分逻辑升级"}, {"id": "8cc19df8-5ad2-4cdd-b745-da7d9963065f", "title": "学生想读的书系统里没有怎么办？如何提报？"}, {"id": "b4e8571c-1003-4722-a4e3-1669f40321a7", "title": "学生调转班情况信息老师怎么查看？如何得知？"}, {"id": "d0483212-ee94-4785-ba6d-3802f08c6bc9", "title": "口语AI批改适配/口语作业显示提交图片/口语作业为什么不能上传视频Mp4?"}, {"id": "5981e9ea-996b-42dc-9aed-53fc14f2da73", "title": "思悦云学习有电脑端或者网页端吗？"}, {"id": "e5b849d6-aaa8-44a6-9c83-800cc1cf853f", "title": "满勤积分上线啦！"}, {"id": "98fdd235-879f-40a5-a032-ecb17ff32b93", "title": "Reading Community 功能升级"}, {"id": "1026de81-f7e8-4f72-abdb-6b9a82a05b9a", "title": "学生做任务传错内容怎么办？能撤回吗？"}];
     let examSummaryShown=false, examSummarySignature='';
     function syncExamSummary(){
@@ -1489,7 +1489,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
       if(!dialog){
         dialog=document.createElement('dialog');dialog.id='exam-summary-dialog';
         dialog.setAttribute('aria-labelledby','exam-summary-title');
-        dialog.innerHTML='<header><div><h2 id="exam-summary-title">10月9日云学习小测内容巩固</h2><small>10月10日 09:30 自动关闭（北京时间）</small></div><button type="button" aria-label="关闭汇总窗口">关闭</button></header><div class="exam-copy"><p>以下汇总引用网站已有内容。点击标题展开查看。</p><div id="exam-summary-items"></div></div>';
+        dialog.innerHTML='<header><div><h2 id="exam-summary-title">10月9日云学习小测内容巩固</h2><small>展示至10月15日，10月16日 00:00 自动关闭（北京时间）</small></div><button type="button" aria-label="关闭汇总窗口">关闭</button></header><div class="exam-copy"><p>以下汇总引用网站已有内容。点击标题展开查看。</p><div id="exam-summary-items"></div></div>';
         dialog.querySelector('button').onclick=()=>dialog.close();
         document.body.appendChild(dialog);
         const entry=document.createElement('button');entry.id='exam-summary-entry';entry.textContent='10月9日云学习小测内容巩固';entry.onclick=()=>{if(Date.now()<EXAM_SUMMARY_END)dialog.showModal();else syncExamSummary();};document.body.appendChild(entry);
