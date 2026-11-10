@@ -685,20 +685,289 @@ window.siyueCloud = {createClient(base, unused, options={}) {
     .feature-share-action {margin:0 0 15px;}
     .share-update-card {max-width:900px;margin:0 auto;border:2px solid var(--yw-dk);border-radius:16px;background:#fff9e8;overflow:hidden;}
     .share-update-note {padding:12px 20px;font-size:12px;color:#795e19;}
-  </style>
+  
+.demo-banner{padding:9px 16px;text-align:center;background:#eee9d1;color:#74622d;font-size:12px}
+.card-head .title{font-size:22px;line-height:1.45;font-weight:800;color:var(--gn-deep)}
+.card-head{padding:20px 22px}.body{padding:0 24px 24px 40px}.content{font-size:15px;line-height:1.85}
+.rich-text h2{font-size:19px!important;line-height:1.5;margin:24px 0 10px}.rich-text h3{font-size:17px!important;line-height:1.6;margin:22px 0 9px}.rich-text h4{font-size:15px!important;margin:20px 0 8px}
+.rich-text h2 *, .rich-text h3 *, .rich-text h4 *{font-size:inherit!important}
+.rich-text p,.rich-text div{margin:0 0 14px}.rich-text p:empty,.rich-text div:empty{display:none}
+.rich-text mark{background:#fff0a6;color:inherit;border-radius:2px;padding:1px 0}
+.rich-text blockquote{margin:18px 0;padding:15px 18px;border-left:3px solid #789a70;border-radius:0 8px 8px 0;background:#eff5e9;color:inherit}
+.rich-text blockquote.kb-warning{background:#fff7df;border-left-color:#d1ac49}.rich-text blockquote>:last-child{margin-bottom:0}
+.rich-text img{display:block;max-width:100%;height:auto;border-radius:8px;margin:18px auto}
+.rich-toolbar button[data-rich-command="highlight"]{background:#fff0a6;color:#67571f}
+.rich-toolbar button[data-rich-command="callout"]{background:#eaf2e3}.rich-editor img{max-height:300px;object-fit:contain}
+@media(max-width:700px){.card-head .title{font-size:19px}.card-head{padding:16px}.body{padding:0 16px 20px 28px}.content{font-size:14px}.rich-text h2{font-size:17px!important}.rich-text h3{font-size:16px!important}.rich-text h4{font-size:14px!important}}
+/* Shared visual system across the entire local prototype. */
+:root{--gn:#6f9478;--gn-mid:#8dab8e;--gn-lt:#d3dfcf;--gn-soft:#edf3e8;--gn-deep:#27634d;--cr:#f7f7ef;--cr-bd:#dfe4d8;--ink:#293c34;--ink-s:#46554b;--ink-l:#7c897c;--sh-card:0 5px 22px #334b3208}
+body,button,input,textarea,select,h1,.directory-title,.modal-title{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.top{background:var(--cr);color:var(--ink);box-shadow:none;border-bottom:1px solid var(--cr-bd)}
+.head{padding:25px 0 20px!important}.title-line h1{color:var(--ink);font-size:24px!important;line-height:1.4!important}.title-line{padding-right:240px!important;min-height:0!important}.head>.header-main{gap:12px}
+.admin-side{color:var(--ink-l);top:25px!important;width:230px!important;gap:6px}.lock{background:#fff;border:1px solid var(--cr-bd);color:var(--gn-deep);padding:8px 13px;border-radius:8px}.lock.admin{color:var(--gn-deep)}.last-updated{font-weight:400}.internal-note{color:#8b7545!important;background:#f0ead6!important;border:0!important;padding:4px 8px!important}.support-note{color:var(--ink-l)!important;background:none!important;padding:0!important;font-size:12px!important}
+.wrap{width:min(1120px,calc(100% - 56px))}main.wrap{padding-top:23px}.card{border:1px solid var(--cr-bd);box-shadow:var(--sh-card);margin-bottom:13px;border-radius:12px}.card-head{padding:18px 22px;align-items:center}.card-head .title{font-size:20px;line-height:1.5;letter-spacing:.01em}.mini-tag{border:0;border-radius:5px;font-size:11px;font-weight:500;background:#edf3e8;padding:3px 7px}.dot{width:5px;height:5px;opacity:.6}.body{padding:4px 28px 25px 38px}.item-info-row{padding-bottom:13px;border-bottom:1px solid #edf0e8;margin-bottom:18px}.crumb,.item-updated{font-weight:400}.rich-text strong{font-weight:650}.rich-text{color:var(--ink-s)}
+.pinned-group{border:1px solid #e8e1c8;background:#faf8eb;border-radius:12px;padding:14px}.pinned-head{color:#887544;font-weight:600;margin-bottom:12px}.card.pinned{border-color:#e5e3d3;box-shadow:none}.pinned-group .card:last-child{margin-bottom:0}.mini-tag.pinned{background:#f6efcf;color:#8b7442}
+.search{border:1px solid var(--cr-bd);box-shadow:none;border-radius:9px;padding:13px 16px}.search input{font-weight:400;font-size:14px}.tabs{gap:7px;margin-top:20px}.tab{border:1px solid transparent;background:transparent;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600}.tags{margin-top:12px;gap:7px}.tag{border:1px solid var(--cr-bd);border-radius:6px;padding:5px 10px;background:transparent;font-size:12px}.mobile-section-hint{color:var(--ink-l);font-size:11px}.directory-head{border-bottom:1px solid var(--cr-bd);margin-top:6px}.directory-title{font-size:21px}.directory-mark{width:4px;height:20px}.category-title{font-weight:600;font-size:14px}.category-head{margin:20px 0 10px}.directory-columns{gap:24px}.admin-tools{padding:13px;background:#edf2e8;border:1px solid var(--cr-bd);border-radius:10px}.admin-tools .primary{font-size:12px;padding:8px 11px;border-radius:7px}.item-admin-actions{font-size:12px;padding:12px 22px 0}.link-btn{font-weight:500}
+.modal{width:min(780px,100%);background:#fff;border:1px solid var(--cr-bd);border-radius:15px;padding:28px;box-shadow:0 15px 70px #233a3325}.modal.narrow{width:min(410px,100%)}.modal-title{font-size:22px;color:var(--ink);margin-bottom:20px}.field{border:1px solid var(--cr-bd);font-weight:400;font-size:14px;border-radius:8px}.modal label{font-size:12px;letter-spacing:0;font-weight:600;margin-top:19px;color:#687b6a}.hint{font-weight:400;font-size:12px}.overlay{background:#263c344d;backdrop-filter:blur(3px)}.rich-toolbar{border:1px solid var(--cr-bd);border-bottom:0;background:#f5f7f0;padding:10px;gap:6px}.rich-toolbar button,.rich-toolbar select{font-weight:500;border:1px solid #dce3d6;border-radius:5px;font-size:12px;padding:6px 8px}.field.rich-editor{padding:17px 20px;min-height:300px;max-height:48vh;font-size:15px}.rich-toolbar button[data-rich-command="warning"]{background:#fff7df}.primary{border-radius:8px}.close{background:#f1f4ec;color:var(--ink-l)}
+@media(max-width:700px){.wrap{width:calc(100% - 28px)}.head{padding:18px 0!important}.head>.header-main{gap:9px}.title-line{padding-right:0!important;min-height:0!important;padding-bottom:76px}.title-line h1{font-size:20px!important}.admin-side{top:76px!important;left:0;right:auto!important;align-items:flex-start;width:auto!important;gap:3px}.last-updated{justify-content:flex-start;font-size:10px}.support-note{font-size:11px!important}.card-head .title{font-size:19px}.card-head{padding:16px}.body{padding:0 18px 20px 28px}.modal{padding:23px 18px}.tabs{gap:4px}.tab{font-size:12px;padding:9px 10px}.pinned-group{padding:10px}.field.rich-editor{padding:12px}.admin-tools{gap:6px}.demo-banner{font-size:11px}}
+/* Topic headings and site identity, shared by desktop and phone. */
+.top{background:#fffef9;border-bottom:1px solid #e5e7dc}.head{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:20px;padding:24px 0!important;align-items:center}.head>.header-main{display:block!important;width:auto!important}.title-line{display:flex!important;align-items:flex-start!important;flex-direction:column!important;gap:7px!important;padding:0!important;min-height:0!important}.site-eyebrow{color:#78917d;font-size:10px;font-weight:650;letter-spacing:.13em;display:flex;align-items:center;gap:8px}.site-eyebrow:before{content:'';width:19px;height:19px;background:#e4eddd;border:1px solid #cbdac2;border-radius:5px;box-shadow:inset 5px 0 #789b72}.title-line h1{font-size:23px!important;font-weight:650!important;letter-spacing:.015em!important;color:#294c39!important;line-height:1.5!important;margin:0!important;text-wrap:pretty}.title-line .internal-note{font-size:10px!important;letter-spacing:0;background:none!important;padding:0!important;color:#9a8150!important;font-weight:500}.support-note{font-size:11px!important;line-height:1.7!important;margin-top:8px!important;color:#849080!important;max-width:620px}.support-note .strong{background:none!important;font-weight:600;color:#6c7e66}.admin-side{position:static!important;width:auto!important;min-width:170px;gap:7px;align-self:center;align-items:flex-end}.lock{font-weight:500;font-size:12px}.last-updated{font-size:10px!important;font-weight:400!important}
+.card-head{background:#eef4e9;border-left:4px solid #72956b;transition:background .15s}.card-head:hover{background:#e7efdf}.card-head .title{color:#254c36;font-size:20px;font-weight:700}.card-head .dot{display:none}.card-head .card-title-wrap{gap:8px}.card.pinned .card-head{background:#f8f4e3;border-left-color:#bcaa69}.card.pinned .card-head .title{color:#615536}.card-head[aria-expanded="true"]{border-bottom:1px solid #e1e8db}.body{padding-top:17px}.item-admin-actions{background:#f9fbf5;padding-bottom:10px}.rich-text h2,.rich-text h3{border-left:3px solid #9ab68b;padding:5px 10px;background:#f5f8ef;border-radius:0 5px 5px 0;font-weight:650}.rich-text h4{color:#386345}.rich-editor h2,.rich-editor h3{background:#f5f8ef}.pinned-head{font-size:12px}.directory-head{margin-bottom:15px}
+@media(max-width:700px){.head{grid-template-columns:minmax(0,1fr) auto!important;gap:12px!important;padding:19px 0 14px!important;align-items:start}.title-line h1{font-size:19px!important;line-height:1.5!important;max-width:100%}.site-eyebrow{font-size:9px;letter-spacing:.08em}.site-eyebrow:before{width:15px;height:15px}.title-line .internal-note{font-size:9px!important;line-height:1.5}.admin-side{min-width:0;width:100px!important;gap:5px!important;align-items:flex-end!important;align-self:start;margin-top:1px}.lock{font-size:10px;padding:6px 8px}.last-updated{font-size:9px!important;justify-content:flex-end!important;line-height:1.5}.support-note{font-size:10px!important;margin-top:8px!important}.head>.header-main{min-width:0}.card-head .title{font-size:18px;line-height:1.55}.card-head{padding:14px 14px;border-left-width:3px}.body{padding:14px 16px 20px 18px}.rich-text h2,.rich-text h3{padding:5px 8px}.demo-banner{font-size:10px;padding:7px 10px}.modal{max-height:92vh;width:100%;padding:22px 15px}.overlay{padding:10px}.rich-toolbar{gap:5px;padding:8px}.rich-toolbar button,.rich-toolbar select{font-size:11px;min-height:33px;padding:5px 7px}.field.rich-editor{max-height:42vh}.feature-split .feature-toggle:first-child .feature-title{font-size:13px;line-height:1.5}.tab{padding:8px 9px}.directory-columns{display:block}}
+@media(max-width:350px){.head{gap:8px!important}.admin-side{width:86px!important}.title-line h1{font-size:17px!important}.wrap{width:calc(100% - 22px)}.card-head .title{font-size:17px}.feature-split{grid-template-columns:minmax(0,1fr) 65px}.feature-split .feature-version-badge{font-size:14px}.feature-split .feature-meta{flex-wrap:wrap}.tab{padding:7px 8px}}
+
+.admin-tools[hidden]{display:none!important}.rich-text .kb-prose-heading{font-size:15px!important;line-height:1.85;font-weight:400;background:none;border:0;padding:0;margin:18px 0}.rich-text .kb-prose-heading::first-line{font-weight:650;color:#365540}@media(max-width:700px){.rich-text .kb-prose-heading{font-size:14px!important}}
+.title-line .internal-note{align-self:flex-start!important;justify-content:flex-start!important;margin:0!important}
+
+/* Compact header: preserve the previously requested small footprint. */
+:root{--cr:#f5f1fa}body{background:#f5f1fa}.top{background:#f5f1fa;border-bottom:1px solid #e5ddeb}.demo-banner{background:#eae1f2;color:#776188;padding:5px 10px;font-size:10px}
+.site-eyebrow{display:none!important}.head{padding:10px 0!important;gap:12px!important;align-items:start!important}.title-line{flex-direction:row!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 10px!important}.title-line h1{font-size:20px!important;line-height:1.3!important;font-weight:650!important;letter-spacing:0!important}.title-line .internal-note{align-self:center!important;font-size:9px!important}.support-note{margin-top:5px!important;font-size:10px!important;line-height:1.5!important}.admin-side{gap:3px!important;min-width:170px;align-self:start!important}.lock{padding:4px 8px;font-size:10px}.last-updated{font-size:9px!important;line-height:1.35!important}main.wrap{padding-top:14px}
+@media(max-width:700px){.head{padding:9px 0!important;gap:8px!important;grid-template-columns:minmax(0,1fr) 102px!important}.title-line{gap:4px!important}.title-line h1{font-size:16px!important;line-height:1.3!important}.title-line .internal-note{font-size:8px!important}.support-note{font-size:9px!important;margin-top:4px!important;line-height:1.4!important}.admin-side{width:102px!important;min-width:0!important;gap:3px!important}.last-updated{font-size:8px!important}.lock{font-size:9px;padding:4px 7px}.demo-banner{font-size:9px;padding:4px 8px}}
+@media(max-width:350px){.head{grid-template-columns:minmax(0,1fr) 90px!important}.admin-side{width:90px!important}.title-line h1{font-size:15px!important}}
+
+/* Purple belongs to topic title bars only. */
+:root{--cr:#f7f7ef}body{background:#f7f7ef}.top{background:#fffef9;border-bottom-color:#e5e7dc}.demo-banner{background:#eee9d1;color:#74622d}
+.card-head,.card.pinned .card-head{background:#eee7f6;border-left-color:#9b83b6}.card-head:hover,.card.pinned .card-head:hover{background:#e6dcf1}.card-head .title,.card.pinned .card-head .title{color:#59436e}.card-head[aria-expanded="true"]{border-bottom-color:#e2d7ec}
+
+/* Compact violet identity; pinned ordering stays unchanged. */
+.top{background:#e9def3;border-bottom:1px solid #d8c7e5}.title-line h1{color:#4a2e65!important;font-size:22px!important;font-weight:800!important;letter-spacing:.015em!important;border-left:3px solid #9270ac;padding-left:9px;line-height:1.2!important}.title-line .internal-note{color:#786184!important}.support-note{color:#76687f!important}.support-note .strong{color:#65536f!important}.admin-side{color:#7b6a88}.lock{color:#634779;border-color:#d4c3e0;background:#faf7fd}.pinned-group{padding-top:12px}
+@media(max-width:700px){.title-line h1{font-size:17px!important;line-height:1.25!important;padding-left:7px;border-left-width:3px}.title-line .internal-note{font-size:8px!important}.pinned-group{padding-top:10px}}
+@media(max-width:350px){.title-line h1{font-size:16px!important}}
+
+/* Compact cards: metadata belongs beside category tags. */
+.card-head{padding:11px 15px!important}.card-head .title,.card.pinned .card-head .title{font-size:17px!important;line-height:1.45!important}.card-head .card-title-wrap{gap:5px!important}.mini-tags{gap:5px 8px;align-items:center}.mini-tags .item-updated{font-size:10px;color:#8a7d94;font-weight:400;white-space:normal}.mini-tag{font-size:10px;padding:2px 6px}.body{padding:12px 18px 16px!important}.card{margin-bottom:9px}.pinned-group{padding:9px!important}.content{line-height:1.7}.rich-text p,.rich-text div{margin-bottom:9px}.rich-text h2{margin:16px 0 8px;font-size:16px!important}.rich-text h3{margin:15px 0 7px;font-size:15px!important}.rich-text h4{margin:12px 0 6px;font-size:14px!important}.rich-text blockquote{margin:12px 0;padding:11px 14px}.rich-text img{margin:12px auto}.parent-talk-label{display:inline-block;font-size:11px!important;font-weight:650!important;line-height:1.5;background:#f1e9f9;color:#70528a;padding:3px 7px;border-radius:4px;vertical-align:baseline}.rich-text h2:has(.parent-talk-label),.rich-text h3:has(.parent-talk-label){background:none;border:0;padding:0}.rich-text .kb-prose-heading{margin:12px 0;font-size:14px!important;line-height:1.7}
+@media(max-width:700px){.card-head{padding:10px 12px!important}.card-head .title,.card.pinned .card-head .title{font-size:16px!important}.body{padding:11px 13px 14px!important}.mini-tags .item-updated{font-size:9px}.pinned-group{padding:7px!important}}
+</style>
 <style id="exam-summary-style">
 #exam-summary-dialog{width:min(900px,calc(100vw - 28px));max-height:85vh;border:0;border-radius:18px;padding:0;color:var(--text,#233);box-shadow:0 18px 80px #0004}#exam-summary-dialog::backdrop{background:#0b173a88}#exam-summary-dialog header{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;background:#fff;padding:18px 22px;border-bottom:1px solid #e2e8f0;z-index:1}#exam-summary-dialog h2{margin:0;font-size:22px}#exam-summary-dialog .exam-copy{padding:10px 22px 24px}#exam-summary-dialog details{border:1px solid #dce3ee;border-radius:12px;margin:12px 0;padding:14px}#exam-summary-dialog summary{cursor:pointer;font-weight:700}#exam-summary-dialog .exam-body{line-height:1.8;margin-top:12px;overflow-wrap:anywhere}#exam-summary-dialog img{max-width:100%;height:auto}#exam-summary-entry{position:fixed;right:18px;bottom:20px;z-index:90;padding:12px 18px;border-radius:24px;background:#173e85;color:#fff;border:0;box-shadow:0 4px 20px #0003;cursor:pointer}
 </style>
+<style>
+/* Compact comparison prototype — local only. */
+.top{background:linear-gradient(135deg,#2e7d5a 0%,#52a882 58%,#70bf98 100%);border-bottom:0}
+.title-line h1{color:#fff!important;border:0;padding-left:0;font-size:22px!important;letter-spacing:0!important}
+.title-line .internal-note{background:#fff0cb!important;color:#853c1d!important;border:1px solid #f8d68e!important;font-size:11px!important;font-weight:750!important;padding:3px 7px!important;border-radius:4px;line-height:1.4!important}
+.support-note,.support-note .strong{color:#eef8f1!important}.admin-side{color:#e7f5ed}.lock{background:#ffffffed;color:#2e7d5a;border-color:#c8e0d3}
+.tabs{gap:5px!important;margin-top:10px!important;justify-content:flex-start}.tab{flex:0 0 auto!important;min-height:0!important;padding:5px 11px!important;font-size:12px!important;line-height:1.4;border-radius:6px}.tags{gap:5px!important;margin-top:7px!important}.tag{padding:3px 8px!important;font-size:11px!important;line-height:1.4;border-radius:5px}.list{margin-top:14px}
+.directory-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.pinned-grid{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}.pinned-grid>.card{margin:0!important;min-width:0}.directory{margin-bottom:20px}
+.card-head .title-category{font-size:10px!important;line-height:1.5;font-weight:650;padding:2px 5px;margin-right:7px;vertical-align:2px;background:#fff9;color:#715489;white-space:nowrap;display:inline-block}.card-head .title-category.error{color:#a44e43;background:#fff0ec}.card-head .dot{display:none}.card-head{gap:8px!important}.card-head .title{font-size:16px!important}.pinned-grid .body{padding:11px 13px 14px!important}
+@media(max-width:700px){.directory-columns{display:block}}
+@media(max-width:700px){.title-line h1{font-size:17px!important}.title-line .internal-note{font-size:10px!important;padding:3px 5px!important}.pinned-grid{grid-template-columns:1fr;gap:8px}.tab{padding:4px 9px!important;font-size:11px!important}.tabs{gap:4px!important}.tag{font-size:10px!important;padding:3px 7px!important}.card-head .title{font-size:15px!important}}
+</style><style id="title-b-only">
+@font-face{font-family:TitleRoundedMain;src:url(data:font/woff2;base64,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) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:TitleRoundedB;src:url(data:font/woff2;base64,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) format('woff2');font-weight:400;font-display:swap}
+.title-line h1#siteTitle{font-family:TitleRoundedMain,TitleRoundedB,sans-serif!important;font-weight:400!important;font-size:22px!important;position:relative;box-sizing:border-box;width:285.125px;height:26.3984375px;line-height:26.3984375px!important;flex:none;white-space:nowrap;letter-spacing:0!important}
+#siteTitle:before{content:'';position:absolute;left:0;top:0;width:43px;height:1.5px;background:#f6d975;pointer-events:none}
+#siteTitle:after{content:'';position:absolute;right:0;bottom:0;width:76px;height:1.5px;background:linear-gradient(to right,#fffbed 0 calc(100% - 5px),transparent calc(100% - 5px) calc(100% - 2px),#fffbed calc(100% - 2px));pointer-events:none}
+@media(max-width:700px){.title-line h1#siteTitle{width:220.90625px;height:21.25px;line-height:21.25px!important;font-size:17px!important}#siteTitle:before{width:33px;height:1px}#siteTitle:after{width:59px;height:1px}}
+</style>
+<!-- Embedded title font licenses
+[Kosugi Maru]
+Copyright (c) 2010 MOTOYA CO.,LTD.      
+
+[Varela Round]
+Copyright (c) 2011-2016 The Varela Round Project Authors (https://github.com/alefalefalef/Varela-Round-Hebrew/), with Reserved Font Names 'Varela' and 'Varela Round'.      
+
+[jf open huninn]
+Copyright (c) 2020-2024 The jf open huninn font is redistributed by justfont Co., LTD., with Reserved Font Names 'open huninn' and 'huninn'. under SIL Open Font License. The Hanzi part of this project was derived from Kosugi Maru under Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+Copyright 2018 The ZCOOL KuaiLe Project Authors (https://github.com/googlefonts/zcool-kuaile)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+https://openfontlicense.org
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+-->
 </head>
 <body>
   <div class="top">
     <div class="wrap">
       <div class="head">
         <div class="header-main">
-          <div class="title-line">
+          <div class="title-line"><div class="site-eyebrow">SIYUE · 教师查询</div>
             <h1 id="siteTitle" data-header-field="siteTitle">思悦云学习App最新信息查询</h1>
             <span id="versionBadge" class="version-badge" hidden>版本 <span id="headerVersion" data-header-field="version">读取中</span></span>
-            <span class="internal-note">⚠ 仅内部使用，严禁发给家长</span>
+            <span class="internal-note">⚠ 仅限内部使用 · 禁止转发家长</span>
           </div>
           <div class="support-note">若问题仍无法解决，请将设备信息及<span class="strong">问题详细描述</span>发给Friday。感谢您的理解和支持。</div>
         </div>
@@ -841,9 +1110,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
 
     function sanitizeRichHtml(html, autoLinks = false) {
       const template = document.createElement("template");
-      template.innerHTML = String(html ?? "");
-      const allowed = new Set(["p", "div", "br", "strong", "b", "u", "em", "i", "ul", "ol", "li", "h2", "h3", "h4", "span", "font", "a"]);
-      const blocked = new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "template", "form", "input", "textarea", "select", "button", "link", "meta", "base", "img", "video", "audio", "source"]);
+      template.innerHTML = String(html ?? "").replace(/(<\/(?:p|div|h[234]|blockquote|ul|ol|li)>)\s+(?=<)/gi, "$1");
+      const allowed = new Set(["p", "div", "br", "strong", "b", "u", "em", "i", "ul", "ol", "li", "h2", "h3", "h4", "span", "font", "a", "mark", "blockquote", "img"]);
+      const blocked = new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "template", "form", "input", "textarea", "select", "button", "link", "meta", "base", "video", "audio", "source"]);
       const fontMap = { 1: 12, 2: 14, 3: 16, 4: 18, 5: 20, 6: 24, 7: 32 };
       const cleanNode = (node, insideLink = false) => {
         if (node.nodeType === 3) {
@@ -853,6 +1122,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         if (node.nodeType !== 1) return "";
         let tag = node.tagName.toLowerCase();
         if (blocked.has(tag)) return "";
+        if(tag==='img'){const src=node.getAttribute('src')||'';return /^(https:\/\/|data:image\/(png|jpeg|webp|gif);base64,)/i.test(src)?`<img src="${esc(src)}" alt="${esc(node.getAttribute('alt')||'正文插图')}" loading="lazy">`:'';}
+
         let href = "";
         if (tag === "a") {
           try {
@@ -866,6 +1137,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(mediaUrl(href))}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
         if (tag === "br") return "<br>";
         const styles = [];
+        if(['rgb(255, 240, 166)','#fff0a6','yellow','rgb(255, 255, 0)'].includes(node.style.backgroundColor))styles.push('background-color:#fff0a6');
+
         const cssSize = node.style.fontSize;
         const size = /^\d+px$/.test(cssSize) ? Number.parseInt(cssSize, 10) : (tag === "font" ? fontMap[node.getAttribute("size")] : null);
         if (RICH_FONT_SIZES.includes(size)) styles.push(`font-size:${size}px`);
@@ -874,7 +1147,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         if ((node.style.textDecorationLine || node.style.textDecoration).split(/\s+/).includes("underline")) styles.push("text-decoration:underline");
         tag = ({ b: "strong", i: "em", font: "span" })[tag] || tag;
         if (tag === "span" && !styles.length) return children;
-        return `<${tag}${styles.length ? ` style="${styles.join(";")}"` : ""}>${children}</${tag}>`;
+        return `<${tag}${/^h[234]$/.test(tag)&&node.textContent.length>90?' class="kb-prose-heading"':''}${tag==='blockquote'?` class="${node.classList.contains('kb-warning')?'kb-warning':'kb-callout'}"`:''}${styles.length ? ` style="${styles.join(";")}"` : ""}>${children}</${tag}>`;
       };
       return Array.from(template.content.childNodes).map((node) => cleanNode(node)).join("");
     }
@@ -915,6 +1188,7 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         <select aria-label="字体大小" data-rich-style="size"><option value="" selected disabled>字号</option>${RICH_FONT_SIZES.map((size) => `<option value="${size}">${size} px</option>`).join("")}</select>
         <button type="button" data-rich-command="bold" aria-label="加粗" aria-pressed="false"><b>加粗</b></button>
         <button type="button" data-rich-command="underline" aria-label="下划线" aria-pressed="false"><u>下划线</u></button>
+        <button type="button" data-rich-command="highlight">文字黄底</button><button type="button" data-rich-command="unhighlight">取消黄底</button><button type="button" data-rich-command="callout">重点说明块</button><button type="button" data-rich-command="warning">提醒块</button><button type="button" data-rich-command="unblock">取消块</button><button type="button" data-rich-command="inlineImage">正文插图</button>
         <button type="button" data-rich-command="insertOrderedList" aria-label="编号列表" aria-pressed="false">1. 序号</button>
         <button type="button" data-rich-command="insertUnorderedList" aria-label="圆点列表" aria-pressed="false">• 圆点</button>
       </div><div id="${esc(editorId)}" class="field rich-editor rich-text" data-rich-editor contenteditable="true" role="textbox" aria-label="正文内容" aria-multiline="true" data-placeholder="写清楚具体的操作步骤"></div>`;
@@ -968,8 +1242,31 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         return prefix.toString().length;
       };
       const bookmark = { start: textOffset(selectedRange.startContainer, selectedRange.startOffset), end: textOffset(selectedRange.endContainer, selectedRange.endOffset) };
+      if(command==='inlineImage'){
+        const insertionRange=selectedRange.cloneRange();
+        const input=document.createElement('input');input.type='file';input.hidden=true;input.accept='image/png,image/jpeg,image/webp,image/gif';document.body.appendChild(input);
+        input.oncancel=()=>input.remove();
+        input.onchange=async()=>{
+          const file=input.files[0];input.remove();if(!file)return;
+          if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type)){showToast('请选择 PNG、JPG、WebP 或 GIF 图片');return}
+          if(file.size>3*1024*1024){showToast('正文图片请小于 3 MB');return}
+          const releaseControls=lockModalForSave();
+          try{
+            const path=`images/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeFileName(file.name)}`;
+            const adminDb=window.siyueCloud.createClient(SUPABASE_URL,SUPABASE_KEY,{global:{headers:{'x-kb-admin-password':state.adminPassword}}});
+            const {error}=await adminDb.storage.from('kb-media').upload(path,file,{contentType:file.type});if(error)throw error;
+            if(!editor.isConnected)return;
+            const url=db.storage.from('kb-media').getPublicUrl(path).data.publicUrl;
+            releaseControls();editor.focus();const selection=window.getSelection();selection.removeAllRanges();selection.addRange(insertionRange);
+            document.execCommand('insertHTML',false,`<img src="${esc(url)}" alt="正文插图"><p><br></p>`);
+            rememberRichSelection();richEditors.get(editor.id)?.onChange?.(editedBodyContent(editor.id));
+          }catch(error){showToast(`图片上传失败：${error.message||'请重试'}`)}finally{releaseControls()}
+        };input.click();return;
+      }
       document.execCommand("styleWithCSS", false, false);
-      if (command === "block" && ["p", "h2", "h3", "h4"].includes(value)) {
+      if(['highlight','unhighlight'].includes(command)){if(selectedRange.collapsed){showToast('请先选中需要标记的文字');return}document.execCommand('styleWithCSS',false,true);document.execCommand('hiliteColor',false,command==='highlight'?'#fff0a6':'transparent');}
+      else if(['callout','warning','unblock'].includes(command)){const node=selection.anchorNode.nodeType===1?selection.anchorNode:selection.anchorNode.parentElement;const box=node.closest('blockquote');if(command==='unblock'){if(box)box.replaceWith(...box.childNodes)}else if(box)box.className=command==='warning'?'kb-warning':'kb-callout';else {const p=node.closest('p,div,h2,h3,h4,li');if(p&&p!==editor){const q=document.createElement('blockquote');q.className=command==='warning'?'kb-warning':'kb-callout';p.before(q);q.append(p)}else showToast('请把光标放入需要突出显示的段落');}}
+      else if (command === "block" && ["p", "h2", "h3", "h4"].includes(value)) {
         document.execCommand("formatBlock", false, value);
       } else if (command === "size" && RICH_FONT_SIZES.includes(Number(value))) {
         document.execCommand("fontSize", false, "7");
@@ -2025,8 +2322,8 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         const regularSectionItems = sectionItems.filter((item) => !isPinned(item));
         const pinnedGroup = pinnedItems.length ? `
           <section class="pinned-group" aria-label="${section.key}置顶内容">
-            <div class="pinned-head"><span>📌 置顶内容</span><span>${pinnedItems.length}/3 条</span></div>
-            ${pinnedItems.map(itemCard).join("")}
+            
+            <div class="pinned-grid">${pinnedItems.map(itemCard).join("")}</div>
           </section>` : "";
         const visibleCategories = state.category ? [state.category] : categories;
         const groups = pinnedGroup + (isClub ? regularSectionItems.map(itemCard).join("") : visibleCategories.map((category) => {
@@ -2095,11 +2392,11 @@ window.siyueCloud = {createClient(base, unused, options={}) {
           <button class="card-head" onclick="toggleItem('${it.id}')" aria-expanded="${open}">
             <span class="dot" style="background:${colorForCategory(category)};margin-top:7px"></span>
             <span class="card-title-wrap">
-              <span class="title">${esc(it.title)}</span>
-              ${showCategory || pinned ? `<span class="mini-tags">
+              <span class="title">${showCategory ? `<span class="mini-tag title-category ${category === "报错" ? "error" : ""}">${esc(category || "未分类")}</span>` : ""}${esc(it.title)}</span>
+              ${true ? `<span class="mini-tags">
                 ${pinned ? `<span class="mini-tag pinned">📌 置顶</span>` : ""}
-                ${showCategory ? `<span class="mini-tag ${category === "报错" ? "error" : ""}">${esc(category || "未分类")}</span>` : ""}
                 ${showCategory && category === "报错" ? `<span class="mini-tag" style="border-color:${colorForFixStatus(status)};color:${colorForFixStatus(status)}">${esc(status)}</span>` : ""}
+                <span class="item-updated">${esc(state.isAdmin ? `更新：${dateTimeText(it.updated_at || it.created_at)}` : `更新：${yearMonthText(it.updated_at || it.created_at)}`)}</span>
               </span>` : ""}
             </span>
             <span>${open ? "⌄" : "›"}</span>
@@ -2135,12 +2432,9 @@ window.siyueCloud = {createClient(base, unused, options={}) {
         : `更新日期：${yearMonthText(updatedAt)}`;
       return `
         <div class="body">
-          <div class="item-info-row">
-            <div class="crumb">${esc(it.section)} ${showCategory && category ? `<span style="color:${colorForCategory(category)}">· ${esc(category)}</span>` : ""}</div>
-            <span class="item-updated">${esc(updatedLabel)}</span>
-          </div>
+
           ${showCategory && category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${linkifyText(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
-          <div class="content">${renderBodyContent(it.content)}</div>
+          <div class="content">${renderBodyContent(it.content).replace(/建议话术[：:]/g, '<span class="parent-talk-label">💬 家长沟通话术</span>')}</div>
           ${media}
         </div>
       `;
