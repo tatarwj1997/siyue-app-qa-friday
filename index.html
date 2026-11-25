@@ -1006,6 +1006,14 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
 /* Parent-facing wording label: pale yellow, distinct from violet topic titles. */
 .parent-talk-label{background:#fff3c6;color:#806322;border-color:#e8d58e}
 </style>
+<style>
+/* Parent-talk typography is identical in legacy and newly inserted paragraphs. */
+.rich-text .parent-talk-content{font-size:14px!important;line-height:1.85!important;font-weight:400!important;font-family:inherit!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+.rich-text .parent-talk-content::first-line{font-weight:inherit;color:inherit}
+.rich-text .parent-talk-content span:not(.parent-talk-label),.rich-text .parent-talk-content strong,.rich-text .parent-talk-content em,.rich-text .parent-talk-content u{font-size:inherit!important;font-family:inherit!important}
+.rich-text .parent-talk-content .parent-talk-label,.rich-text .parent-talk-content .parent-talk-label *{font-size:11px!important;font-weight:650!important;font-family:inherit!important;line-height:1.5!important}
+.rich-text hr{display:block;height:0;border:0;border-top:1px solid #dce3d6;margin:18px 0;clear:both}
+</style>
 </head>
 <body>
   <div class="top">
@@ -1155,12 +1163,56 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       } catch { return null; }
     }
 
+    function normalizeParentTalk(root) {
+      // Convert legacy labels once, before rendering and before entering the editor.
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const texts = []; let text;
+      while ((text = walker.nextNode())) texts.push(text);
+      texts.forEach(node => {
+        if (node.parentElement?.closest('.parent-talk-label') || !/建议话术[：:]/.test(node.textContent)) return;
+        const parts = node.textContent.split(/建议话术[：:]/);
+        const fragment = document.createDocumentFragment();
+        parts.forEach((part, index) => {
+          if (index) {
+            const label = document.createElement('span');
+            label.className = 'parent-talk-label'; label.textContent = '💬 家长沟通话术';
+            fragment.append(label);
+          }
+          fragment.append(document.createTextNode(part));
+        });
+        node.replaceWith(fragment);
+      });
+      let previous = null;
+      root.querySelectorAll('.parent-talk-label').forEach(label => {
+        const block = label.closest('p,div,h2,h3,h4,li,blockquote');
+        if (previous && block === previous.closest('p,div,h2,h3,h4,li,blockquote')) {
+          const gap = document.createRange(); gap.setStartAfter(previous); gap.setEndBefore(label);
+          if (!gap.toString().trim()) { label.remove(); return; }
+        }
+        previous = label;
+      });
+    }
+
+    function styleParentTalk(root) {
+      root.querySelectorAll('.parent-talk-content').forEach(node => node.classList.remove('parent-talk-content'));
+      root.querySelectorAll('.parent-talk-label').forEach(label => {
+        const block = label.closest('p,div,h2,h3,h4,li,blockquote');
+        if (!block || block === root || block.matches('[data-rich-editor]')) return;
+        block.classList.add('parent-talk-content');
+        // Legacy speech paragraphs may be split into consecutive sibling DIVs.
+        for (let next = block.nextElementSibling; next && next.matches('p,div'); next = next.nextElementSibling) {
+          if (!next.textContent.trim() || next.querySelector('h2,h3,h4,strong,b,.parent-talk-label,hr,img,a')) break;
+          next.classList.add('parent-talk-content');
+        }
+      });
+    }
+
     function numberRichHeadings(root) {
       root.querySelectorAll('[data-heading-number]').forEach(node => node.removeAttribute('data-heading-number'));
       const levels = [0, 0, 0];
       root.querySelectorAll('h2,h3,h4').forEach((heading) => {
         heading.removeAttribute('data-heading-number');
-        if (heading.classList.contains('kb-prose-heading')) return;
+        if (heading.classList.contains('kb-prose-heading') || heading.classList.contains('parent-talk-content')) return;
         const level = Number(heading.tagName.slice(1)) - 2;
         for (let i = 0; i < level; i++) if (!levels[i]) levels[i] = 1;
         levels[level]++;
@@ -1172,7 +1224,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
     function sanitizeRichHtml(html, autoLinks = false) {
       const template = document.createElement("template");
       template.innerHTML = String(html ?? "").replace(/(<\/(?:p|div|h[234]|blockquote|ul|ol|li)>)\s+(?=<)/gi, "$1");
-      const allowed = new Set(["p", "div", "br", "strong", "b", "u", "em", "i", "ul", "ol", "li", "h2", "h3", "h4", "span", "font", "a", "mark", "blockquote", "img"]);
+      const allowed = new Set(["p", "div", "br", "strong", "b", "u", "em", "i", "ul", "ol", "li", "h2", "h3", "h4", "span", "font", "a", "mark", "blockquote", "img", "hr"]);
       const blocked = new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "template", "form", "input", "textarea", "select", "button", "link", "meta", "base", "video", "audio", "source"]);
       const fontMap = { 1: 12, 2: 14, 3: 16, 4: 18, 5: 20, 6: 24, 7: 32 };
       const cleanNode = (node, insideLink = false) => {
@@ -1197,6 +1249,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         if (!allowed.has(tag)) return children;
         if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(mediaUrl(href))}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
         if (tag === "br") return "<br>";
+        if (tag === "hr") return "<hr>";
         const styles = [];
         if(tag === 'mark' || ['rgb(255, 240, 166)','#fff0a6','yellow','rgb(255, 255, 0)'].includes(node.style.backgroundColor))styles.push('background-color:#fff0a6');
         else if(node.style.backgroundColor === 'transparent' || node.style.backgroundColor === 'rgba(0, 0, 0, 0)')styles.push('background-color:transparent');
@@ -1216,6 +1269,8 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       };
       const cleaned = Array.from(template.content.childNodes).map((node) => cleanNode(node)).join("");
       template.innerHTML = cleaned;
+      normalizeParentTalk(template.content);
+      styleParentTalk(template.content);
       numberRichHeadings(template.content);
       return template.innerHTML;
     }
@@ -1247,7 +1302,11 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
 
     function renderBodyContent(value) {
       const html = decodeRichContent(value);
-      return html === null ? linkifyText(value) : `<div class="rich-text">${sanitizeRichHtml(html, true)}</div>`;
+      if (html !== null) return `<div class="rich-text">${sanitizeRichHtml(html, true)}</div>`;
+      const template = document.createElement('template');
+      template.innerHTML = linkifyText(value);
+      normalizeParentTalk(template.content);
+      return template.innerHTML;
     }
 
     function richEditorMarkup(editorId = "editContent") {
@@ -1256,7 +1315,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         <select aria-label="字体大小" data-rich-style="size"><option value="" selected disabled>字号</option>${RICH_FONT_SIZES.map((size) => `<option value="${size}">${size} px</option>`).join("")}</select>
         <button type="button" data-rich-command="bold" aria-label="加粗" aria-pressed="false"><b>加粗</b></button>
         <button type="button" data-rich-command="underline" aria-label="下划线" aria-pressed="false"><u>下划线</u></button>
-        <button type="button" data-rich-command="parentTalk">💬 家长沟通话术</button><button type="button" data-rich-command="highlight" aria-pressed="false">文字黄底</button><button type="button" data-rich-command="callout" aria-pressed="false">重点说明块</button><button type="button" data-rich-command="warning" aria-pressed="false">提醒块</button><button type="button" data-rich-command="inlineImage">正文插图</button>
+        <button type="button" data-rich-command="parentTalk">💬 家长沟通话术</button><button type="button" data-rich-command="highlight" aria-pressed="false">文字黄底</button><button type="button" data-rich-command="callout" aria-pressed="false">重点说明块</button><button type="button" data-rich-command="warning" aria-pressed="false">提醒块</button><button type="button" data-rich-command="divider">分割线</button><button type="button" data-rich-command="inlineImage">正文插图</button>
         <button type="button" data-rich-command="insertOrderedList" aria-label="编号列表" aria-pressed="false">1. 序号</button>
         <button type="button" data-rich-command="insertUnorderedList" aria-label="圆点列表" aria-pressed="false">• 圆点</button>
       </div><div id="${esc(editorId)}" class="field rich-editor rich-text" data-rich-editor contenteditable="true" role="textbox" aria-label="正文内容" aria-multiline="true" data-placeholder="写清楚具体的操作步骤"></div>`;
@@ -1317,7 +1376,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       record.selection = range.cloneRange();
       editor.previousElementSibling.querySelectorAll("[data-rich-command]").forEach((button) => {
         const command = button.dataset.richCommand;
-        if (['parentTalk', 'inlineImage'].includes(command)) return;
+        if (['parentTalk', 'divider', 'inlineImage'].includes(command)) return;
         const blocks = richSelectedBlocks(range, editor);
         const active = command === 'highlight' ? richHighlightActive(range, editor)
           : ['callout', 'warning'].includes(command) ? blocks.length > 0 && blocks.every(block => block.matches('blockquote.' + (command === 'warning' ? 'kb-warning' : 'kb-callout')))
@@ -1377,8 +1436,15 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       }
       document.execCommand("styleWithCSS", false, false);
       if(command === 'parentTalk') {
-        document.execCommand('insertHTML', false, '<span class="parent-talk-label">💬 家长沟通话术</span>&nbsp;');
+        const node = selectedRange.startContainer.nodeType === 1 ? selectedRange.startContainer : selectedRange.startContainer.parentElement;
+        const block = node.closest('p,div,h2,h3,h4,li,blockquote');
+        const existing = block && block !== editor ? block.querySelector('.parent-talk-label') : null;
+        if (existing) {
+          const range = document.createRange(); range.setStartAfter(existing); range.collapse(true);
+          selection.removeAllRanges(); selection.addRange(range);
+        } else document.execCommand('insertHTML', false, '<span class="parent-talk-label">💬 家长沟通话术</span>&nbsp;');
       }
+      else if(command === 'divider') { document.execCommand('insertHorizontalRule', false); }
       else if(command === 'highlight') {
         if(selectedRange.collapsed){showToast('请先选中需要标记的文字');return}
         const active = richHighlightActive(selectedRange, editor);
@@ -1435,6 +1501,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         selection.removeAllRanges();
         selection.addRange(range);
       }
+      styleParentTalk(editor);
       numberRichHeadings(editor);
       rememberRichSelection();
       richEditors.get(editor.id)?.onChange?.(editedBodyContent(editor.id));
@@ -2575,7 +2642,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         <div class="body">
 
           ${showCategory && category === "报错" ? `<div class="status-panel ${statusClass}"><b>${esc(status)}</b>${linkifyText(it.fix_note || (status === "修复中" ? DEFAULT_FIXING_NOTE : "暂无补充说明。"))}</div>` : ""}
-          <div class="content">${renderBodyContent(it.content).replace(/建议话术[：:]/g, '<span class="parent-talk-label">💬 家长沟通话术</span>')}</div>
+          <div class="content">${renderBodyContent(it.content)}</div>
           ${media}
         </div>
       `;
