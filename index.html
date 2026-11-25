@@ -737,6 +737,12 @@ body,button,input,textarea,select,h1,.directory-title,.modal-title{font-family:-
 /* Compact cards: metadata belongs beside category tags. */
 .card-head{padding:11px 15px!important}.card-head .title,.card.pinned .card-head .title{font-size:17px!important;line-height:1.45!important}.card-head .card-title-wrap{gap:5px!important}.mini-tags{gap:5px 8px;align-items:center}.mini-tags .item-updated{font-size:10px;color:#8a7d94;font-weight:400;white-space:normal}.mini-tag{font-size:10px;padding:2px 6px}.body{padding:12px 18px 16px!important}.card{margin-bottom:9px}.pinned-group{padding:9px!important}.content{line-height:1.7}.rich-text p,.rich-text div{margin-bottom:9px}.rich-text h2{margin:16px 0 8px;font-size:16px!important}.rich-text h3{margin:15px 0 7px;font-size:15px!important}.rich-text h4{margin:12px 0 6px;font-size:14px!important}.rich-text blockquote{margin:12px 0;padding:11px 14px}.rich-text img{margin:12px auto}.parent-talk-label{display:inline-block;font-size:11px!important;font-weight:650!important;line-height:1.5;background:#f1e9f9;color:#70528a;padding:3px 7px;border-radius:4px;vertical-align:baseline}.rich-text h2:has(.parent-talk-label),.rich-text h3:has(.parent-talk-label){background:none;border:0;padding:0}.rich-text .kb-prose-heading{margin:12px 0;font-size:14px!important;line-height:1.7}
 @media(max-width:700px){.card-head{padding:10px 12px!important}.card-head .title,.card.pinned .card-head .title{font-size:16px!important}.body{padding:11px 13px 14px!important}.mini-tags .item-updated{font-size:9px}.pinned-group{padding:7px!important}}
+/* Editor controls and automatic numbering, scoped to article content. */
+.rich-toolbar button[data-rich-command="highlight"][aria-pressed="false"],.rich-toolbar button[data-rich-command="callout"][aria-pressed="false"],.rich-toolbar button[data-rich-command="warning"][aria-pressed="false"]{background:#fff;color:var(--ink-s);border-color:#dce3d6}
+.rich-text [data-heading-number]::before{content:attr(data-heading-number) " ";font-variant-numeric:tabular-nums}
+.rich-toolbar button[data-rich-command="highlight"][aria-pressed="true"]{background:#fff0a6;color:#725800;border-color:#c9a438}
+.rich-toolbar button[data-rich-command="callout"][aria-pressed="true"]{background:#e2edd8;color:#315844;border-color:#789a70}
+.rich-toolbar button[data-rich-command="warning"][aria-pressed="true"]{background:#fff0a6;color:#725800;border-color:#c9a438}
 </style>
 <style id="exam-summary-style">
 #exam-summary-dialog{width:min(900px,calc(100vw - 28px));max-height:85vh;border:0;border-radius:18px;padding:0;color:var(--text,#233);box-shadow:0 18px 80px #0004}#exam-summary-dialog::backdrop{background:#0b173a88}#exam-summary-dialog header{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;background:#fff;padding:18px 22px;border-bottom:1px solid #e2e8f0;z-index:1}#exam-summary-dialog h2{margin:0;font-size:22px}#exam-summary-dialog .exam-copy{padding:10px 22px 24px}#exam-summary-dialog details{border:1px solid #dce3ee;border-radius:12px;margin:12px 0;padding:14px}#exam-summary-dialog summary{cursor:pointer;font-weight:700}#exam-summary-dialog .exam-body{line-height:1.8;margin-top:12px;overflow-wrap:anywhere}#exam-summary-dialog img{max-width:100%;height:auto}#exam-summary-entry{position:fixed;right:18px;bottom:20px;z-index:90;padding:12px 18px;border-radius:24px;background:#173e85;color:#fff;border:0;box-shadow:0 4px 20px #0003;cursor:pointer}
@@ -1149,6 +1155,20 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       } catch { return null; }
     }
 
+    function numberRichHeadings(root) {
+      root.querySelectorAll('[data-heading-number]').forEach(node => node.removeAttribute('data-heading-number'));
+      const levels = [0, 0, 0];
+      root.querySelectorAll('h2,h3,h4').forEach((heading) => {
+        heading.removeAttribute('data-heading-number');
+        if (heading.classList.contains('kb-prose-heading')) return;
+        const level = Number(heading.tagName.slice(1)) - 2;
+        for (let i = 0; i < level; i++) if (!levels[i]) levels[i] = 1;
+        levels[level]++;
+        for (let i = level + 1; i < levels.length; i++) levels[i] = 0;
+        heading.dataset.headingNumber = levels.slice(0, level + 1).join('.');
+      });
+    }
+
     function sanitizeRichHtml(html, autoLinks = false) {
       const template = document.createElement("template");
       template.innerHTML = String(html ?? "").replace(/(<\/(?:p|div|h[234]|blockquote|ul|ol|li)>)\s+(?=<)/gi, "$1");
@@ -1178,7 +1198,9 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         if (tag === "a") return href && !insideLink ? `<a class="body-link" href="${esc(mediaUrl(href))}" target="_blank" rel="noopener noreferrer">${children}</a>` : children;
         if (tag === "br") return "<br>";
         const styles = [];
-        if(['rgb(255, 240, 166)','#fff0a6','yellow','rgb(255, 255, 0)'].includes(node.style.backgroundColor))styles.push('background-color:#fff0a6');
+        if(tag === 'mark' || ['rgb(255, 240, 166)','#fff0a6','yellow','rgb(255, 255, 0)'].includes(node.style.backgroundColor))styles.push('background-color:#fff0a6');
+        else if(node.style.backgroundColor === 'transparent' || node.style.backgroundColor === 'rgba(0, 0, 0, 0)')styles.push('background-color:transparent');
+        if(tag === 'mark') tag = 'span';
 
         const cssSize = node.style.fontSize;
         const size = /^\d+px$/.test(cssSize) ? Number.parseInt(cssSize, 10) : (tag === "font" ? fontMap[node.getAttribute("size")] : null);
@@ -1187,10 +1209,15 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         else if (node.style.fontWeight === "normal" || node.style.fontWeight === "400") styles.push("font-weight:normal");
         if ((node.style.textDecorationLine || node.style.textDecoration).split(/\s+/).includes("underline")) styles.push("text-decoration:underline");
         tag = ({ b: "strong", i: "em", font: "span" })[tag] || tag;
+        const parentTalk = tag === 'span' && node.classList.contains('parent-talk-label');
+        if (parentTalk) return `<span class="parent-talk-label">${children}</span>`;
         if (tag === "span" && !styles.length) return children;
         return `<${tag}${/^h[234]$/.test(tag)&&node.textContent.length>90?' class="kb-prose-heading"':''}${tag==='blockquote'?` class="${node.classList.contains('kb-warning')?'kb-warning':'kb-callout'}"`:''}${styles.length ? ` style="${styles.join(";")}"` : ""}>${children}</${tag}>`;
       };
-      return Array.from(template.content.childNodes).map((node) => cleanNode(node)).join("");
+      const cleaned = Array.from(template.content.childNodes).map((node) => cleanNode(node)).join("");
+      template.innerHTML = cleaned;
+      numberRichHeadings(template.content);
+      return template.innerHTML;
     }
 
     function bodyContentText(value) {
@@ -1229,7 +1256,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         <select aria-label="字体大小" data-rich-style="size"><option value="" selected disabled>字号</option>${RICH_FONT_SIZES.map((size) => `<option value="${size}">${size} px</option>`).join("")}</select>
         <button type="button" data-rich-command="bold" aria-label="加粗" aria-pressed="false"><b>加粗</b></button>
         <button type="button" data-rich-command="underline" aria-label="下划线" aria-pressed="false"><u>下划线</u></button>
-        <button type="button" data-rich-command="highlight">文字黄底</button><button type="button" data-rich-command="unhighlight">取消黄底</button><button type="button" data-rich-command="callout">重点说明块</button><button type="button" data-rich-command="warning">提醒块</button><button type="button" data-rich-command="unblock">取消块</button><button type="button" data-rich-command="inlineImage">正文插图</button>
+        <button type="button" data-rich-command="parentTalk">💬 家长沟通话术</button><button type="button" data-rich-command="highlight" aria-pressed="false">文字黄底</button><button type="button" data-rich-command="callout" aria-pressed="false">重点说明块</button><button type="button" data-rich-command="warning" aria-pressed="false">提醒块</button><button type="button" data-rich-command="inlineImage">正文插图</button>
         <button type="button" data-rich-command="insertOrderedList" aria-label="编号列表" aria-pressed="false">1. 序号</button>
         <button type="button" data-rich-command="insertUnorderedList" aria-label="圆点列表" aria-pressed="false">• 圆点</button>
       </div><div id="${esc(editorId)}" class="field rich-editor rich-text" data-rich-editor contenteditable="true" role="textbox" aria-label="正文内容" aria-multiline="true" data-placeholder="写清楚具体的操作步骤"></div>`;
@@ -1237,6 +1264,44 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
 
     function richSelectionIsValid(range, editor) {
       return range && editor && editor.contains(range.startContainer) && editor.contains(range.endContainer);
+    }
+
+    function selectedRichTextNodes(range, editor) {
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let node;
+      while ((node = walker.nextNode())) {
+        if (!node.textContent || !range.intersectsNode(node)) continue;
+        if (node === range.startContainer && range.startOffset === node.length) continue;
+        if (node === range.endContainer && range.endOffset === 0) continue;
+        nodes.push(node);
+      }
+      return nodes;
+    }
+
+    function richTextIsHighlighted(node, editor) {
+      for (let el = node.nodeType === 1 ? node : node.parentElement; el && el !== editor; el = el.parentElement) {
+        // Block backgrounds and the parent-talk label are separate formatting controls.
+        if (el.matches('blockquote,h2,h3,h4,.parent-talk-label')) return false;
+        const color = el.style.backgroundColor;
+        if (color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return false;
+        if (el.tagName === 'MARK' || ['rgb(255, 240, 166)', 'rgb(255, 255, 0)', 'yellow', '#fff0a6'].includes(color)) return true;
+      }
+      return false;
+    }
+
+    function richHighlightActive(range, editor) {
+      if (range.collapsed) return richTextIsHighlighted(range.startContainer, editor);
+      const nodes = selectedRichTextNodes(range, editor);
+      return nodes.length > 0 && nodes.every(node => richTextIsHighlighted(node, editor));
+    }
+
+    function richSelectedBlocks(range, editor) {
+      const nodes = range.collapsed ? [range.startContainer] : selectedRichTextNodes(range, editor);
+      return [...new Set(nodes.map(node => {
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        return el.closest('blockquote') || el.closest('p,div,h2,h3,h4,li');
+      }).filter(node => node && node !== editor && editor.contains(node)))];
     }
 
     window.rememberRichSelection = () => {
@@ -1251,7 +1316,13 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
       activeRichEditorId = editor.id;
       record.selection = range.cloneRange();
       editor.previousElementSibling.querySelectorAll("[data-rich-command]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(document.queryCommandState(button.dataset.richCommand)));
+        const command = button.dataset.richCommand;
+        if (['parentTalk', 'inlineImage'].includes(command)) return;
+        const blocks = richSelectedBlocks(range, editor);
+        const active = command === 'highlight' ? richHighlightActive(range, editor)
+          : ['callout', 'warning'].includes(command) ? blocks.length > 0 && blocks.every(block => block.matches('blockquote.' + (command === 'warning' ? 'kb-warning' : 'kb-callout')))
+          : document.queryCommandState(command);
+        button.setAttribute("aria-pressed", String(active));
       });
     };
 
@@ -1305,8 +1376,36 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         };input.click();return;
       }
       document.execCommand("styleWithCSS", false, false);
-      if(['highlight','unhighlight'].includes(command)){if(selectedRange.collapsed){showToast('请先选中需要标记的文字');return}document.execCommand('styleWithCSS',false,true);document.execCommand('hiliteColor',false,command==='highlight'?'#fff0a6':'transparent');}
-      else if(['callout','warning','unblock'].includes(command)){const node=selection.anchorNode.nodeType===1?selection.anchorNode:selection.anchorNode.parentElement;const box=node.closest('blockquote');if(command==='unblock'){if(box)box.replaceWith(...box.childNodes)}else if(box)box.className=command==='warning'?'kb-warning':'kb-callout';else {const p=node.closest('p,div,h2,h3,h4,li');if(p&&p!==editor){const q=document.createElement('blockquote');q.className=command==='warning'?'kb-warning':'kb-callout';p.before(q);q.append(p)}else showToast('请把光标放入需要突出显示的段落');}}
+      if(command === 'parentTalk') {
+        document.execCommand('insertHTML', false, '<span class="parent-talk-label">💬 家长沟通话术</span>&nbsp;');
+      }
+      else if(command === 'highlight') {
+        if(selectedRange.collapsed){showToast('请先选中需要标记的文字');return}
+        const active = richHighlightActive(selectedRange, editor);
+        document.execCommand('styleWithCSS',false,true);
+        document.execCommand('hiliteColor',false,active ? 'transparent' : '#fff0a6');
+      }
+      else if(['callout','warning'].includes(command)) {
+        let blocks = richSelectedBlocks(selectedRange, editor);
+        // Plain-text entries may have only text and BR children, with no paragraph wrapper.
+        if (!blocks.length && editor.textContent.trim()) {
+          document.execCommand('formatBlock', false, 'p');
+          blocks = richSelectedBlocks(selection.getRangeAt(0), editor);
+        }
+        const className = command === 'warning' ? 'kb-warning' : 'kb-callout';
+        const active = blocks.length > 0 && blocks.every(block => block.matches('blockquote.' + className));
+        blocks.forEach(block => {
+          if (block.tagName === 'BLOCKQUOTE') {
+            if (active) block.replaceWith(...block.childNodes);
+            else block.className = className;
+          } else {
+            const box = document.createElement('blockquote');
+            box.className = className;
+            block.before(box);box.append(block);
+          }
+        });
+        if (!blocks.length) showToast('请把光标放入需要突出显示的段落');
+      }
       else if (command === "block" && ["p", "h2", "h3", "h4"].includes(value)) {
         document.execCommand("formatBlock", false, value);
       } else if (command === "size" && RICH_FONT_SIZES.includes(Number(value))) {
@@ -1319,7 +1418,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         document.execCommand(command, false);
       }
       // List commands can move the caret to the beginning of the new list item.
-      if (["insertOrderedList", "insertUnorderedList"].includes(command) && beforeText && editor.textContent === beforeText) {
+      if (["insertOrderedList", "insertUnorderedList", "callout", "warning"].includes(command) && beforeText && editor.textContent === beforeText) {
         const locate = (offset) => {
           const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
           let node;
@@ -1336,6 +1435,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         selection.removeAllRanges();
         selection.addRange(range);
       }
+      numberRichHeadings(editor);
       rememberRichSelection();
       richEditors.get(editor.id)?.onChange?.(editedBodyContent(editor.id));
     };
@@ -1366,7 +1466,7 @@ main.wrap{padding-top:27px}.feature-split{gap:16px;grid-template-columns:minmax(
         if (richSelectionIsValid(range, editor)) { richEditors.get(editorId).selection = range; restoreRichSelection(editorId); }
         insertTransfer(event.dataTransfer);
       });
-      editor.addEventListener("input", () => { rememberRichSelection(); onChange?.(editedBodyContent(editorId)); });
+      editor.addEventListener("input", () => { numberRichHeadings(editor); rememberRichSelection(); onChange?.(editedBodyContent(editorId)); });
       editor.addEventListener("keyup", rememberRichSelection);
       editor.addEventListener("mouseup", rememberRichSelection);
     }
